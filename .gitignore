@@ -8,8 +8,8 @@
 *.axf
 *.htm
 *.crf
-.KEY_Transformation/MDK/
-.KEY_Transformation/MDK/*
+.mdk/
+.mdk/*
 
 
 

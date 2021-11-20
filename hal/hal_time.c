@@ -1,8 +1,8 @@
 /*
  * @Author: your name
  * @Date: 2021-11-20 19:28:49
- * @LastEditTime: 2021-11-20 20:17:15
- * @LastEditors: your name
+ * @LastEditTime: 2021-11-20 20:19:07
+ * @LastEditors: Please set LastEditors
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \Wifi Host\hal\hal_time.c
  */
@@ -26,8 +26,8 @@ static void hal_timer4Config(void)
 	
 	TIM_DeInit(TIM4); 
 	//TIM_TimeBaseStructure.TIM_Period = 10000; 			//10ms	  
-//	TIM_TimeBaseStructure.TIM_Period = 1000; 			//1ms
-	TIM_TimeBaseStructure.TIM_Period = 50; 			//50us	  
+//	TIM_TimeBaseStructure.TIM_Period = 1000; 				//1ms
+	TIM_TimeBaseStructure.TIM_Period = 50; 					//50us	  
 	TIM_TimeBaseStructure.TIM_Prescaler = SystemCoreClock/1000000 - 1;              
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;     
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; 
