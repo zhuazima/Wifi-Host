@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "stdlib.h": "c",
+        "hal_oled.h": "c",
+        "app.h": "c",
+        "os_system.h": "c",
+        "hal_led.h": "c",
+        "stm32f10x_usart.h": "c",
+        "hal_uart.h": "c",
+        "stm32f10x.h": "c"
+    }
+}

@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-11-20 19:28:52
+ * @LastEditTime: 2021-11-22 19:22:18
+ * @LastEditors: Please set LastEditors
+ * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @FilePath: \Wifi Host\user\stm32f10x_conf.h
+ */
 /**
   ******************************************************************************
   * @file    Project/STM32F10x_StdPeriph_Template/stm32f10x_conf.h 
@@ -42,7 +50,7 @@
    #include "stm32f10x_rcc.h"
 /* #include "stm32f10x_rtc.h" */
 /* #include "stm32f10x_sdio.h" */
-/* #include "stm32f10x_spi.h" */
+#include "stm32f10x_spi.h"
  #include "stm32f10x_tim.h" 
  #include "stm32f10x_usart.h" 
 /* #include "stm32f10x_wwdg.h" */

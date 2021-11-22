@@ -29,8 +29,12 @@
 ".\objects\hal_led.o"
 ".\objects\hal_cpu.o"
 ".\objects\hal_time.o"
+".\objects\hal_key.o"
+".\objects\hal_oled.o"
+".\objects\hal_uart.o"
 ".\objects\os_system.o"
---strict --scatter ".\Objects\wh01.sct"
---summary_stderr --info summarysizes --map --xref --callgraph --symbols
+".\objects\app.o"
+--library_type=microlib --strict --scatter ".\Objects\wh01.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list ".\Listings\wh01.map" -o .\Objects\wh01.axf

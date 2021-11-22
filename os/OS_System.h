@@ -1,3 +1,15 @@
+/*
+ * @Author: your name
+ * @Date: 2021-11-20 19:28:52
+ * @LastEditTime: 2021-11-22 19:14:37
+ * @LastEditors: your name
+ * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @FilePath: \Wifi Host\os\OS_System.h
+ */
+#ifndef _OS_SYSTEM_H_
+#define _OS_SYSTEM_H_
+
+
 
 
 extern void S_QueueEmpty(unsigned char **Head, unsigned char **Tail, unsigned char *HBuff);
@@ -52,7 +64,9 @@ typedef void (*CPUInterrupt_CallBack_t)(CPU_EA_TYPEDEF cmd,unsigned char *pSta);
 typedef enum
 {
 	OS_TASK1,
-
+	OS_TASK2,
+	OS_TASK3,
+	 
 	OS_TASK_SUM	
 }OS_TaskIDTypeDef;
 
@@ -84,3 +98,9 @@ void OS_Start(void);
 void OS_ClockInterruptHandle(void);
 void OS_TaskGetUp(OS_TaskIDTypeDef taskID);	
 void OS_TaskSleep(OS_TaskIDTypeDef taskID);
+
+
+
+
+#endif
+
