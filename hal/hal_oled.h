@@ -16,7 +16,7 @@
 #define OLED_CLK_PIN    GPIO_Pin_5
 #define OLED_SDA_PIN    GPIO_Pin_7
 #define OLED_RES_PIN    GPIO_Pin_4
-#define OLED_DC_PIN     GPIO_Pin_3
+#define OLED_DC_PIN     GPIO_Pin_6
 
 
 

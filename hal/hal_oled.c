@@ -727,27 +727,27 @@ static void hal_OledConfig(void)
 	/* Enable SPI1 and GPIOA clocks */
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);			//复用功能使能
 	
 	/* Configure SPI1 pins: SCK, MOSI */
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_5 |GPIO_Pin_7;
+	GPIO_InitStructure.GPIO_Pin =  OLED_CLK_PIN | OLED_SDA_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 	
 	//OLED复位引脚
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+	GPIO_InitStructure.GPIO_Pin = OLED_RES_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	GPIO_SetBits(GPIOA,GPIO_Pin_4);
+	GPIO_SetBits(GPIOA,OLED_RES_PIN);
 	
 	//OLED命令/数据控制引脚
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+	GPIO_InitStructure.GPIO_Pin = OLED_DC_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	GPIO_SetBits(GPIOA,GPIO_Pin_6);
+	GPIO_SetBits(GPIOA,OLED_DC_PIN);
 	
 	/* SPI1 configuration */ 
 	SPI_InitStructure.SPI_Direction = SPI_Direction_1Line_Tx; //SPI1设置为两线全双工

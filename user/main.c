@@ -27,6 +27,7 @@ int main(void)
 	AppInit();
 	OS_CreatTask(OS_TASK2,AppProc,1,OS_RUN);
 
+
 	
 	OS_Start();
 	
