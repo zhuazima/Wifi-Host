@@ -19,11 +19,9 @@ void AppInit(void)
 	hal_KeyScanCBSRegister(KeyEventHandle);
 	hal_Oled_Init();
 	hal_Oled_ShowString(16,20,"Smart alarm",16,1);
-	hal_Oled_ShowString(40,40,"system",16,0);
+	hal_Oled_ShowString(40,40,"system",16,1);
 	hal_Oled_Refresh();
 
-
-	// printf("oled is heres..\r\n");
 }
 
 

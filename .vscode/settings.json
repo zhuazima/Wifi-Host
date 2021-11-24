@@ -7,6 +7,8 @@
         "hal_led.h": "c",
         "stm32f10x_usart.h": "c",
         "hal_uart.h": "c",
-        "stm32f10x.h": "c"
+        "stm32f10x.h": "c",
+        "hal_time.h": "c",
+        "hal_cpu.h": "c"
     }
 }

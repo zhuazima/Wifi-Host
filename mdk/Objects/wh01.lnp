@@ -32,6 +32,7 @@
 ".\objects\hal_key.o"
 ".\objects\hal_oled.o"
 ".\objects\hal_uart.o"
+".\objects\hal_rfd.o"
 ".\objects\os_system.o"
 ".\objects\app.o"
 --library_type=microlib --strict --scatter ".\Objects\wh01.sct"

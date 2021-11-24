@@ -563,6 +563,11 @@
               <FileType>1</FileType>
               <FilePath>..\hal\hal_Uart.c</FilePath>
             </File>
+            <File>
+              <FileName>hal_rfd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hal\hal_rfd.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
