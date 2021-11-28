@@ -1,21 +1,34 @@
-/*
- * @Author: your name
- * @Date: 2021-11-22 19:24:16
- * @LastEditTime: 2021-11-22 19:25:38
- * @LastEditors: your name
- * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE#
- * @FilePath: \Wifi Host\hal\hal_Uart.h
- */
-#ifndef _HAL_UART_H_
-#define _HAL_UART_H_
 
-#include "stdio.h"
+#ifndef _HAL_UART_H
+#define _HAL_UART_H
 
+#define DEBUG_TXBUFF_SIZE_MAX 400
 
-int fputc(int ch, FILE *f);
-int GetKey (void);
+#define DEBUG_TX_PORT	GPIOA
+#define DEBUF_TX_PIN	GPIO_Pin_9
 
+#define DEBUG_RX_PORT	GPIOA
+#define DEBUF_RX_PIN	GPIO_Pin_10
 
+#define DEBUG_USART_PORT	USART1
+
+#define WIFI_TX_PORT	GPIOA
+#define WIFI_TX_PIN	GPIO_Pin_2
+
+#define WIFI_RX_PORT	GPIOA
+#define WIFI_RX_PIN	GPIO_Pin_3
+
+#define WIFI_USART_PORT	USART2
+
+typedef enum
+{
+    Uart1_Debug,
+    Uart2_WIFI_Comm,
+    Uart_Max
+}Uart_num_Typedef; 
+
+void hal_Uart_Proc(void);
+void hal_Uart_Init(void);
 
 
 

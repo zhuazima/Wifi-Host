@@ -12,9 +12,9 @@
 #include "hal_cpu.h"
 #include "hal_time.h"
 #include "OS_System.h"
-#include "app.h"
+#include "hal_Uart.h"
 #include "hal_rfd.h"
-
+#include "app.h"
 
 
 int main(void)
@@ -30,8 +30,11 @@ int main(void)
 	hal_RFDInit();
 	OS_CreatTask(OS_TASK2,hal_RFDProc,1,OS_RUN);
 
+	hal_Uart_Init();
+	OS_CreatTask(OS_TASK3,hal_Uart_Proc,1,OS_RUN);
+
 	AppInit();
-	OS_CreatTask(OS_TASK3,AppProc,1,OS_RUN);
+	OS_CreatTask(OS_TASK4,AppProc,1,OS_RUN);
 
 
 	OS_Start();
