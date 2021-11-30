@@ -10,6 +10,7 @@
         "stm32f10x.h": "c",
         "hal_time.h": "c",
         "hal_cpu.h": "c",
-        "hal_rfd.h": "c"
+        "hal_rfd.h": "c",
+        "hal_eeprom.h": "c"
     }
 }

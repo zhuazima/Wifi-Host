@@ -13,6 +13,7 @@
 #include "hal_Uart.h"
 #include "OS_System.h"
 #include "hal_rfd.h"
+#include "hal_eeprom.h"
 
 
 Queue8 RFDRcvMsg;	//RFD接收队列
@@ -23,7 +24,10 @@ static void RfdRcvHandle(unsigned char *pBuff);
 
 void AppInit(void)
 {	
+	unsigned char Write[66],Read[66],i;
+	
 	hal_Oled_Init();
+	hal_EepromInit();
 	QueueEmpty(RFDRcvMsg);
 	hal_KeyScanCBSRegister(KeyEventHandle);
 	hal_RFCRcvCBSRegister(RfdRcvHandle); 
@@ -32,6 +36,22 @@ void AppInit(void)
 	//hal_Oled_ShowString(16,20,"Smart alarm",16,1);
 	//hal_Oled_ShowString(40,40,"system",16,1);
 	hal_Oled_Refresh();
+
+	for(i = 0;i < 66 ;i++)
+	{
+		Write[i] = i+1;
+		Read[i] = 0;
+	}
+
+	I2C_PageWrite(0,Write,66);
+	I2C_Read(0,Read,66);
+	if( (Read[0] == 1) && (Read[1] == 2) )
+	{
+		LedMsgInput(LED1,LED_BLINK3,1);
+	}
+
+	
+
 
 }
 
