@@ -271,7 +271,7 @@ void I2C_PageWrite(unsigned short address,unsigned char *pDat, unsigned short nu
 		}
 	}
 	
-	//先填满写入地址页
+	//先填满当前页
 	if(temp)
 	{
 		I2C_Start();
@@ -291,16 +291,16 @@ void I2C_PageWrite(unsigned short address,unsigned char *pDat, unsigned short nu
 			I2C_WaitAck();	
 		}
 		I2C_Stop();
-		I2C_delay(20000);	
+		I2C_delay(20000);
 	}
 		
 	
-	len -= temp;			
+	len -= temp;			//长度减去已经写入的字节
 	addr += temp;			//地址加上已经写入的字节
  
-	page = len/EEPROM_PAGE_SIZE;			
-	remainder = len%EEPROM_PAGE_SIZE;
-	for(i=0; i<page; i++)		
+	page = len/EEPROM_PAGE_SIZE;			//计算页数
+	remainder = len%EEPROM_PAGE_SIZE;		//计算另起一页还有多少字节
+	for(i=0; i<page; i++)					//页写
 	{
 		I2C_Start();
 		I2C_SendByte(0xA0);
@@ -320,11 +320,11 @@ void I2C_PageWrite(unsigned short address,unsigned char *pDat, unsigned short nu
 		}
 		I2C_Stop();
 		addr += EEPROM_PAGE_SIZE;
-	//	temp += EEPROM_PAGE_SIZE;
+		temp += EEPROM_PAGE_SIZE;
 		I2C_delay(20000);		
 	}
 	
-	if(remainder)
+	if(remainder)			//另起一页
 	{
 		I2C_Start();
 		I2C_SendByte(0xA0);
