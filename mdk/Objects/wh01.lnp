@@ -34,6 +34,7 @@
 ".\objects\hal_uart.o"
 ".\objects\hal_rfd.o"
 ".\objects\hal_eeprom.o"
+".\objects\hal_beep.o"
 ".\objects\os_system.o"
 ".\objects\app.o"
 ".\objects\para.o"

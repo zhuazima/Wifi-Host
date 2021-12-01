@@ -15,6 +15,7 @@
 #include "hal_rfd.h"
 #include "hal_eeprom.h"
 #include "para.h"
+#include "hal_beep.h"
 
 
 Queue8 RFDRcvMsg;	//RFD接收队列
@@ -30,6 +31,7 @@ void AppInit(void)
 	hal_Oled_Init();
 	hal_EepromInit();
 	Para_Init();
+	hal_BeepInit();
 	QueueEmpty(RFDRcvMsg);
 	hal_KeyScanCBSRegister(KeyEventHandle);
 	hal_RFCRcvCBSRegister(RfdRcvHandle); 
@@ -51,10 +53,6 @@ void AppInit(void)
 	{
 		LedMsgInput(LED1,LED_BLINK3,1);
 	}
-
-	
-
-
 }
 
 

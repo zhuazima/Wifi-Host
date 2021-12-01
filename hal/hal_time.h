@@ -7,6 +7,7 @@ typedef enum
 	T_LED,					//LED定时器
 	T_RFD_PULSH_RCV,	//无线数据引脚电平的读取评率
 	T_RFD_RECODEFLT,	//无线重复码过滤延时
+	T_BEEP,
 	T_SUM,
 }TIMER_ID_TYPEDEF;
 	
