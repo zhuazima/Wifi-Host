@@ -593,6 +593,11 @@
               <FileType>1</FileType>
               <FilePath>..\app\app.c</FilePath>
             </File>
+            <File>
+              <FileName>para.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\app\para.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

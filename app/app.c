@@ -14,6 +14,7 @@
 #include "OS_System.h"
 #include "hal_rfd.h"
 #include "hal_eeprom.h"
+#include "para.h"
 
 
 Queue8 RFDRcvMsg;	//RFD接收队列
@@ -28,6 +29,7 @@ void AppInit(void)
 	
 	hal_Oled_Init();
 	hal_EepromInit();
+	Para_Init();
 	QueueEmpty(RFDRcvMsg);
 	hal_KeyScanCBSRegister(KeyEventHandle);
 	hal_RFCRcvCBSRegister(RfdRcvHandle); 
