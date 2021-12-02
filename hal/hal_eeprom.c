@@ -235,7 +235,7 @@ static void hal_I2C_SCL(unsigned char bVal)
 	}
 }
 
-static void I2C_WriteByte(unsigned short address,unsigned char dat)
+void I2C_WriteByte(unsigned short address,unsigned char dat)
 {
 	I2C_Start();
 

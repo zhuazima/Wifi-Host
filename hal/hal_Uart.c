@@ -183,6 +183,7 @@ static void hal_DMA_Config(void)
 void USART1_IRQHandler(void)
 {
 	unsigned char dat;
+	dat = dat;
 	if(USART_GetITStatus(USART1,USART_IT_RXNE) != RESET)
 	{							
 		dat = USART_ReceiveData(USART1);

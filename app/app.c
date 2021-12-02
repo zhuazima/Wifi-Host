@@ -1,11 +1,4 @@
-/*
- * @Author: your name
- * @Date: 2021-11-22 18:39:10
- * @LastEditTime: 2021-11-22 19:20:45
- * @LastEditors: Please set LastEditors
- * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- * @FilePath: \Wifi Host\app\app.c
- */
+
 #include "hal_led.h"
 #include "hal_key.h"
 #include "hal_oled.h"
@@ -16,43 +9,33 @@
 #include "hal_eeprom.h"
 #include "para.h"
 #include "hal_beep.h"
+#include "string.h"
 
 
+#define MENU_MAP_LEN	10
 Queue8 RFDRcvMsg;	//RFD接收队列
+LINK_STATE_TYPEDEF link_state;
+
+stu_MENU_TYPEDEF MENU_Map[MENU_MAP_LEN],*pCurrentMENU;
 
 
 static void KeyEventHandle(KEY_VALUE_TYPEDEF keys);
 static void RfdRcvHandle(unsigned char *pBuff);
+void Menu_Reset(void);
+void Menu_Init(void);
 
 void AppInit(void)
-{	
-	unsigned char Write[66],Read[66],i;
+{
 	
 	hal_Oled_Init();
 	hal_EepromInit();
 	Para_Init();
 	hal_BeepInit();
+	Menu_Init();
 	QueueEmpty(RFDRcvMsg);
 	hal_KeyScanCBSRegister(KeyEventHandle);
-	hal_RFCRcvCBSRegister(RfdRcvHandle); 
+	hal_RFCRcvCBSRegister(RfdRcvHandle);
 
-	hal_Oled_ShowString(40,2,"Recode",16,1);
-	//hal_Oled_ShowString(16,20,"Smart alarm",16,1);
-	//hal_Oled_ShowString(40,40,"system",16,1);
-	hal_Oled_Refresh();
-
-	for(i = 0;i < 66 ;i++)
-	{
-		Write[i] = i+1;
-		Read[i] = 0;
-	}
-
-	I2C_PageWrite(0,Write,66);
-	I2C_Read(0,Read,66);
-	if( (Read[0] == 1) && (Read[1] == 2) )
-	{
-		LedMsgInput(LED1,LED_BLINK3,1);
-	}
 }
 
 
@@ -61,81 +44,47 @@ void AppInit(void)
 
 void AppProc(void)
 {
-	unsigned char tBuff[3],dat;
-	if(QueueDataLen(RFDRcvMsg))
-	{
-		QueueDataOut(RFDRcvMsg,&dat);
-		if(dat == '#')
-		{
-			QueueDataOut(RFDRcvMsg,&tBuff[2]);	//地址码
-			QueueDataOut(RFDRcvMsg,&tBuff[1]);	//地址码
-			QueueDataOut(RFDRcvMsg,&tBuff[0]);	//数据码
-			
-			dat = (tBuff[2]>>4)&0x0F;
-			if(dat > 9)
-			{
-				hal_Oled_ShowChar(20,40,(dat-10)+'A',16,1);
-			}else
-			{
-				hal_Oled_ShowChar(20,40,dat+'0',16,1);
-			}
-			
-			
-			dat = tBuff[2]&0x0F;
-			if(dat > 9)
-			{
-				hal_Oled_ShowChar(28,40,(dat-10)+'A',16,1);
-			}else
-			{
-				hal_Oled_ShowChar(28,40,dat+'0',16,1);
-			}
-			 
-			hal_Oled_ShowChar(36,40,' ',16,1);
-			 
-			dat = (tBuff[1]>>4)&0x0F;
-			if(dat > 9)
-			{
-				hal_Oled_ShowChar(44,40,(dat-10)+'A',16,1);
-			}else
-			{
-				hal_Oled_ShowChar(44,40,dat+'0',16,1);
-			}
-			
-			
-			dat = tBuff[1]&0x0F;
-			if(dat > 9)
-			{
-				hal_Oled_ShowChar(52,40,(dat-10)+'A',16,1);
-			}else
-			{
-				hal_Oled_ShowChar(52,40,dat+'0',16,1);
-			}
-			
-			hal_Oled_ShowChar(60,40,' ',16,1);
-			 
-			dat = (tBuff[0]>>4)&0x0F;
-			if(dat > 9)
-			{
-				hal_Oled_ShowChar(68,40,(dat-10)+'A',16,1);
-			}else
-			{
-				hal_Oled_ShowChar(68,40,dat+'0',16,1);
-			}
-			
-			
-			dat = tBuff[0]&0x0F;
-			if(dat > 9)
-			{
-				hal_Oled_ShowChar(76,40,(dat-10)+'A',16,1);
-			}else
-			{
-				hal_Oled_ShowChar(76,40,dat+'0',16,1);
-			} 
+	
+	pCurrentMENU->action();
 
-			hal_Oled_Refresh();
-		}
-	}
 }
+
+
+
+void Desk_Menu_ActionCBS(void)
+{
+
+	hal_Oled_Clear();
+	
+	hal_Oled_ShowString(0,0,"w",8,1);	//8 *16
+	hal_Oled_ShowString(16,20,"Away arm",24,1); //12*24
+
+	hal_Oled_Refresh();
+}
+
+void Menu_Init(void)
+{
+	Menu_Reset();
+
+	pCurrentMENU = &MENU_Map[0];
+	pCurrentMENU->action = Desk_Menu_ActionCBS;
+}
+
+void Menu_Reset(void)
+{
+	unsigned char i;
+	for(i = 0;i < MENU_MAP_LEN; i++)
+	{
+		MENU_Map[i].ID = i + 1;
+		MENU_Map[i].Name = 0;
+		MENU_Map[i].action = 0;
+		MENU_Map[i].Last_Menu = 0;
+		MENU_Map[i].Next_Menu = 0;
+		MENU_Map[i].Father_Menu = 0;
+		MENU_Map[i].ChiLdren_Menu = 0;
+	}	
+}
+
 
 
 //-----------------驱动层回调处理函数------------------------
