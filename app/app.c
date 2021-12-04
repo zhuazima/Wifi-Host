@@ -53,13 +53,18 @@ void AppProc(void)
 
 void Desk_Menu_ActionCBS(void)
 {
+	if(pCurrentMENU ->refreshScreenCmd == SCREEN_CMD_RESET)
+	{
+		pCurrentMENU ->refreshScreenCmd = SCREEN_CMD_NULL;
+		
+		hal_Oled_Clear();
+		
+		hal_Oled_ShowString(0,0,"w",8,1);	//8 *16
+		hal_Oled_ShowString(16,20,"Away arm",24,1); //12*24
 
-	hal_Oled_Clear();
-	
-	hal_Oled_ShowString(0,0,"w",8,1);	//8 *16
-	hal_Oled_ShowString(16,20,"Away arm",24,1); //12*24
+		hal_Oled_Refresh();
+	}
 
-	hal_Oled_Refresh();
 }
 
 void Menu_Init(void)
@@ -68,6 +73,7 @@ void Menu_Init(void)
 
 	pCurrentMENU = &MENU_Map[0];
 	pCurrentMENU->action = Desk_Menu_ActionCBS;
+	pCurrentMENU->refreshScreenCmd = SCREEN_CMD_RESET;
 }
 
 void Menu_Reset(void)
@@ -77,6 +83,7 @@ void Menu_Reset(void)
 	{
 		MENU_Map[i].ID = i + 1;
 		MENU_Map[i].Name = 0;
+		MENU_Map[i].refreshScreenCmd = SCREEN_CMD_NULL;
 		MENU_Map[i].action = 0;
 		MENU_Map[i].Last_Menu = 0;
 		MENU_Map[i].Next_Menu = 0;
