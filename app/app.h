@@ -31,17 +31,16 @@ typedef struct MENU_STRUCT
 
 }stu_MENU_TYPEDEF;
 
-typedef struct
+typedef struct SYSTEM_TIME
 {
-    unsigned short year;
-    unsigned char month;
-    unsigned char day;
-    unsigned char weekday;
-    unsigned char hour;
-    unsigned char min;
-    unsigned char sec;
-}stu_DATA_TYPEDEF;
-
+	unsigned short year;
+	unsigned char mon;
+	unsigned char day;
+	unsigned char week;
+	unsigned char hour;
+	unsigned char min;
+	unsigned char sec;
+}stu_system_time;
 
 
 void AppInit(void);
