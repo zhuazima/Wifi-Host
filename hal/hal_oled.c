@@ -454,7 +454,44 @@ static void hal_Oled_WR_Byte(unsigned char dat,unsigned char cmd)
 	OLED_DC_Set();   	  
 }
 
-
+//清屏指定区域
+//x,y：起点坐标
+//sizex,sizey,长宽
+ 
+void hal_Oled_ClearArea(unsigned char x,unsigned char y,unsigned char sizex,unsigned char sizey)
+{
+	unsigned char i,n,m;
+	unsigned char xy=0;
+	unsigned char y1;
+ 
+	y1 = y;
+	//sizey=sizey/8+((sizey%8)?1:0);	//计算一个图形y轴所占用的字节数
+	xy=sizey/8;
+	 
+	for(n=0;n<xy;n++)
+	{
+		for(i=0; i<sizex; i++)
+		{
+			for(m=0; m<8; m++)
+			{
+				hal_Oled_DrawPoint(x+i,y1+m,0);
+			}
+		}
+		//一行数据传输完毕
+		y1 = y1+8;
+	}
+	
+	xy=sizey%8;
+	for(i=0; i<sizex; i++)
+	{
+		for(m=0; m<xy; m++)
+		{
+			hal_Oled_DrawPoint(x+i,y1+m,0);
+		}
+	}
+	
+	
+}
 //开启OLED显示 
 void hal_Oled_DisPlay_On(void)
 {

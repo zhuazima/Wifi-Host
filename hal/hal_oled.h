@@ -58,6 +58,7 @@ void hal_Oled_ShowString(unsigned char x,unsigned char y,unsigned char *chr,unsi
 void hal_Oled_ShowNum(unsigned char x,unsigned char y,unsigned int num,unsigned char len,unsigned char size1,unsigned char mode);
 void hal_Oled_ScrollDisplay(unsigned char num,unsigned char space,unsigned char mode);
 void hal_Oled_Init(void);
+void hal_Oled_ClearArea(unsigned char x,unsigned char y,unsigned char sizex,unsigned char sizey);
 
 
 
