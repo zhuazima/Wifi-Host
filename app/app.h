@@ -1,6 +1,26 @@
 #ifndef _APP_H
 #define _APP_H
 
+//探测器码定义
+//门磁探测器 2262编码
+#define SENSOR_CODE_DOOR_OPEN		0x0A		 //开门	
+#define SENSOR_CODE_DOOR_CLOSE		0x0E		 //关门
+#define SENSOR_CODE_DOOR_TAMPER		0x07		 //防拆,预留
+#define	SENSOR_CODE_DOOR_LOWPWR		0x06		 //低压
+
+
+
+//遥控器 EV1527编码
+#define SENSOR_CODE_REMOTE_ENARM				0x02	 
+#define SENSOR_CODE_REMOTE_DISARM				0x01		 
+#define SENSOR_CODE_REMOTE_HOMEARM				0x04
+#define SENSOR_CODE_REMOTE_SOS					0x08
+
+
+#define SENSOR_CODE_PIR						0x03
+#define SENSOR_CODE_PIR_TAMPER				0x0B
+#define SENSOR_CODE_PIR_LOWPWR				0x05
+
 typedef enum 
 {
     LINKSTATE_WAIT,

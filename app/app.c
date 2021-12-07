@@ -12,7 +12,7 @@
 #include "string.h"
 
 
-#define MENU_MAP_LEN	10
+
 Queue8 RFDRcvMsg;	//RFD接收队列
 LINK_STATE_TYPEDEF link_state;
 
@@ -319,10 +319,17 @@ static void stgMenu_MainMenuCBS(void)
 				pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];;
 				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
 			break;
+
+
+			case KEY6_CLICK_RELEASE:	//确定
+				pModeMenu->pChild = pMenu;
+				pModeMenu = pModeMenu->pChild;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+			break;
 			
 		}
 	}
-	if(bpMenu != pMenu)
+	if(bpMenu != pMenu)		//选中菜单的记录
 	{
 		bpMenu = pMenu;
 		if(ClrScreenFlag)
@@ -355,7 +362,128 @@ static void stgMenu_MainMenuCBS(void)
 //探测器配对菜单处理函数
 static void stgMenu_LearnSensorCBS(void)
 {
+	unsigned char keys,dat,tBuff[3];
+	static unsigned char PairingComplete = 0;
+	static unsigned short Timer = 0;
+	Stu_DTC stuTempDevice; 		//用于设置探测器参数时初始化探测器信息
+	 
+	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
+	{
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+		QueueEmpty(RFDRcvMsg);
+		//pMenu = &settingModeMenu[0];
+		hal_Oled_Clear();
+		
+		hal_Oled_ShowString(28,0,"Learning DTC",12,1);
+		hal_Oled_ShowString(43,28,"Pairing...",8,1);
+		
+		hal_Oled_Refresh();
+		
+		keys = 0xFF;
+		PairingComplete = 0; 
+		Timer = 0;
+		 
+	}
+	
+	if(QueueDataLen(RFDRcvMsg) && (!PairingComplete))
+	{
+		QueueDataOut(RFDRcvMsg,&dat);
+		if(dat == '#')
+		{
+			QueueDataOut(RFDRcvMsg,&tBuff[2]);
+			QueueDataOut(RFDRcvMsg,&tBuff[1]);
+			QueueDataOut(RFDRcvMsg,&tBuff[0]);
+			hal_Oled_ClearArea(0,28,128,36);		//清屏
+			
+			
+			stuTempDevice.Code[2] = tBuff[2];
+			stuTempDevice.Code[1] = tBuff[1];
+			stuTempDevice.Code[0] = tBuff[0];
+			
+			if((stuTempDevice.Code[0]==SENSOR_CODE_DOOR_OPEN) ||
+			(stuTempDevice.Code[0]==SENSOR_CODE_DOOR_CLOSE) ||
+			(stuTempDevice.Code[0]==SENSOR_CODE_DOOR_TAMPER)||
+			(stuTempDevice.Code[0]==SENSOR_CODE_DOOR_LOWPWR))
+			{
+				//是无线门磁码
+				stuTempDevice.DTCType = DTC_DOOR;
+				
+			}else if((stuTempDevice.Code[0]==SENSOR_CODE_REMOTE_ENARM) ||
+			(stuTempDevice.Code[0]==SENSOR_CODE_REMOTE_DISARM) ||
+			(stuTempDevice.Code[0]==SENSOR_CODE_REMOTE_HOMEARM) ||
+			(stuTempDevice.Code[0]==SENSOR_CODE_REMOTE_SOS))
+			{
+				//无线遥控器码
+				stuTempDevice.DTCType = DTC_REMOTE;
+			}else if((stuTempDevice.Code[0]==SENSOR_CODE_PIR)
+			|| (stuTempDevice.Code[0]==SENSOR_CODE_PIR_LOWPWR)
+			|| (stuTempDevice.Code[0]==SENSOR_CODE_PIR_TAMPER))
+			{
+				//无线红外码
+				stuTempDevice.DTCType = DTC_PIR_MOTION;
+			}
+			stuTempDevice.ZoneType = ZONE_TYP_1ST;
+			if(AddDtc(&stuTempDevice) != 0xFF)
+			{
+				switch(stuTempDevice.DTCType)
+				{
+					case DTC_DOOR:
+						hal_Oled_ShowString(34,28,"Success!",8,1);
+						hal_Oled_ShowString(16,36,"Added door dtc..",8,1);
+					break;
+					case DTC_REMOTE:
+						hal_Oled_ShowString(34,28,"Success!",8,1);
+						hal_Oled_ShowString(7,36,"Added remote dtc..",8,1);
+					break;
+					case DTC_PIR_MOTION:
+						hal_Oled_ShowString(34,28,"Success!",8,1);
+						hal_Oled_ShowString(19,36,"Added pir dtc..",8,1);
+					break;
+				}
+				
+				hal_Oled_Refresh();
+				PairingComplete = 1;		//配对完成标志
+				Timer = 0;		 
+			}else
+			{
+				hal_Oled_ShowString(34,28,"Fail...",8,1);
+				hal_Oled_Refresh();
+			}
+			
+		}
+		
+		
+	}
+	
+	if(pModeMenu->keyVal != 0xff)
+	{
+		keys = pModeMenu->keyVal;
+		pModeMenu->keyVal = 0xFF;	//恢复菜单按键值
+		switch(keys)
+		{
+			case KEY5_CLICK_RELEASE:	//取消
+				pModeMenu = pModeMenu->pParent;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+			break;
+			case KEY5_LONG_PRESS:		//返回桌面
+				pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];;;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+			break;
+		}
+	}
+
+	if(PairingComplete)
+	{
+		Timer++;
+		if(Timer > 150)//+1=10ms,10*150=1500ms=1.5s
+		{
+			Timer = 0;
+			pModeMenu = pModeMenu->pParent;			//1.5秒时间到，自动返回父级菜单
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+		}
+	}
 }
+
 
 //探测器列表菜单处理函数
 static void stgMenu_DTCListCBS(void)

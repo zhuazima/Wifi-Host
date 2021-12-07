@@ -35,7 +35,7 @@ typedef struct
 
 
 void Para_Init(void);
-
+unsigned char AddDtc(Stu_DTC *pDevPara);
 
 
 #endif
