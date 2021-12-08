@@ -5,7 +5,6 @@ Stu_DTC dERP[PARA_DTC_SUM];	//EEPROM设备参数数据结构
 
 void FactoryReset(void);
 static ParaCheck(void);
-static void CreatDtc(unsigned char n);
 
 
 void Para_Init(void)
@@ -18,6 +17,53 @@ void Para_Init(void)
     }
 
 }
+
+//检查DTC是否存在，0不存在，1存在
+unsigned char CheckPresenceofDtc(unsigned char i)
+{
+	unsigned char result;
+	result = 0;
+	if(i < PARA_DTC_SUM)	//防溢出检测
+	{
+		if(dERP[i].Mark)
+		{
+			result = 1;
+		}
+	}
+	
+	return result;
+}
+
+
+//获取指定探测器的结构体数据,*pdDevPara-外部结构体指针，idx-要获取的探测器结构体数组下标
+void GetDtcStu(Stu_DTC *pdDevPara, unsigned char idx)
+{
+	unsigned char i;
+ 
+	if(idx >= PARA_DTC_SUM)		
+	{
+		return;			//id异常
+	}
+	
+	pdDevPara->ID = dERP[idx].ID;
+	
+	pdDevPara->Mark = dERP[idx].Mark ;
+	pdDevPara->NameNum = dERP[idx].NameNum;
+	
+	for(i=0; i<16; i++)
+	{
+		pdDevPara->Name[i] = dERP[idx].Name[i];
+	}
+	pdDevPara->DTCType = dERP[idx].DTCType;
+	pdDevPara->ZoneType = dERP[idx].ZoneType;
+	
+	
+	 
+	pdDevPara->Code[0] = dERP[idx].Code[0];
+	pdDevPara->Code[1] = dERP[idx].Code[1];
+	pdDevPara->Code[2] = dERP[idx].Code[2];
+}
+
 
 void FactoryReset(void)
 {
@@ -89,45 +135,7 @@ static ParaCheck(void)
 	return error;
 }
 
-static void CreatDtc(unsigned char n)
-{
-	unsigned char i,NameStrIndex,Temp,j;
-	for(i=0; i<n; i++)
-	{
-		dERP[i].ID = i+1;
-		dERP[i].Mark = 1;
-		
-		dERP[i].Name[0] = 'Z';
-		dERP[i].Name[1] = 'o';
-		dERP[i].Name[2] = 'n';
-		dERP[i].Name[3] = 'e';
-		dERP[i].Name[4] = '-';
-		NameStrIndex = 5;
-		Temp = 	i+1;	
-		dERP[i].NameNum = Temp;
-		
-		
-		dERP[i].Name[NameStrIndex++] = '0'+(Temp/100);
-		dERP[i].Name[NameStrIndex++] = '0'+((Temp%100)/10);
-		dERP[i].Name[NameStrIndex++] = '0'+((Temp%100)%10);
 
-		for(j=NameStrIndex; j<16; j++)
-		{
-			dERP[i].Name[j] = 0;					//把没用到的名字字节清零
-		}
-
-
-
-		dERP[i].DTCType = DTC_DOOR;
-		dERP[i].ZoneType = ZONE_TYP_1ST;
-
-
-		dERP[i].Code[0] = 0x0C;
-		dERP[i].Code[1] = 0xBB;
-		dERP[i].Code[2] = 0xAA;
-			
-	}
-}
 
 
 unsigned char AddDtc(Stu_DTC *pDevPara)
@@ -189,3 +197,4 @@ unsigned char AddDtc(Stu_DTC *pDevPara)
 	}
 	return 0xFF;			//学习失败
 }
+

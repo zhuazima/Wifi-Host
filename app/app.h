@@ -37,6 +37,8 @@ typedef enum
 	SCREEN_CMD_UPDATE,		//更新原来显示
 }SCREEN_CMD;		//刷新屏显示标志
 
+
+
 //普通菜单列表
 typedef enum
 {
@@ -68,6 +70,8 @@ typedef enum
 	STG_SUB_3_MENU_POS,
 	STG_SUB_4_MENU_POS,
 }MENU_POS;
+
+
 
 typedef struct MODE_MENU
 {

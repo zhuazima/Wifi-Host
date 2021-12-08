@@ -19,6 +19,7 @@ LINK_STATE_TYPEDEF link_state;
 stu_system_time stuSystemtime;		//系统时间
 stu_mode_menu *pModeMenu;		//系统当前菜单
 
+
 static void KeyEventHandle(KEY_VALUE_TYPEDEF keys);
 static void RfdRcvHandle(unsigned char *pBuff);
 void Menu_Reset(void);
@@ -30,6 +31,10 @@ static void stgMenu_MachineInfoCBS(void);
 static void stgMenu_WifiCBS(void);
 static void stgMenu_DTCListCBS(void);
 static void stgMenu_LearnSensorCBS(void);
+static void stgMenu_dl_EditCBS(void);
+static void stgMenu_dl_DeleteCBS(void);
+static void stgMenu_dl_ReviewCBS(void);
+static void stgMenu_dl_ReviewMainCBS(void);
 
 //初始化桌面菜单
 stu_mode_menu generalModeMenu[GNL_MENU_SUM] =
@@ -52,6 +57,13 @@ stu_mode_menu settingModeMenu[STG_MENU_SUM] =
 	{STG_MENU_FACTORY_SETTINGS,STG_SUB_2_MENU_POS,"5. Default Setting",stgMenu_FactorySettingsCBS,1,0,0xFF,0,0,0,0},
 };
 
+stu_mode_menu DL_ZX_Review[STG_MENU_DL_ZX_SUM] = 
+{
+	{STG_MENU_DL_ZX_REVIEW_MAIN,STG_SUB_2_MENU_POS,"View",stgMenu_dl_ReviewMainCBS,SCREEN_CMD_RESET,0,0xFF,0,0,0,0},	
+	{STG_MENU_DL_ZX_REVIEW,STG_SUB_3_MENU_POS,"View",stgMenu_dl_ReviewCBS,SCREEN_CMD_RESET,0,0xFF,0,0,0,0},		 
+	{STG_MENU_DL_ZX_EDIT,STG_SUB_3_MENU_POS,"Edit",stgMenu_dl_EditCBS,SCREEN_CMD_RESET,0,0xFF,0,0,0,0},
+	{STG_MENU_DL_ZX_DELETE,STG_SUB_3_MENU_POS,"Delete",stgMenu_dl_DeleteCBS,SCREEN_CMD_RESET,0,0xFF,0,0,0,0},
+};
 
 
 void AppInit(void)
@@ -242,6 +254,7 @@ static void gnlMenu_DesktopCBS(void)
 		}
 	}
 }
+
 
 //设置主菜单
 static void stgMenu_MainMenuCBS(void)
@@ -488,6 +501,283 @@ static void stgMenu_LearnSensorCBS(void)
 //探测器列表菜单处理函数
 static void stgMenu_DTCListCBS(void)
 {
+	unsigned char keys;
+	unsigned char i,j;
+	unsigned char ClrScreenFlag;
+	Stu_DTC tStuDtc;
+	 
+	//static Stu_DTC StuDTCtemp[PARA_DTC_SUM];
+	static unsigned char DtcNameBuff[PARA_DTC_SUM][16];
+	static stu_mode_menu settingMode_DTCList_Sub_Menu[PARA_DTC_SUM];
+	static stu_mode_menu *pMenu;
+	static stu_mode_menu *bpMenu=0;		//用来备份上一次菜单选项，主要用于刷屏判断
+	static unsigned char stgMainMenuSelectedPos=0;	//用来记录当前选中菜单的位置
+	static stu_mode_menu *MHead,*MTail;		//这两个结构是为了上下切换菜单时做翻页处理
+	static unsigned char pMenuIdx=0;		//用来动态指示菜单下标,最终这个就是已学习探测器的总数量	
+	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
+	{
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+		
+		pMenuIdx = 0;
+		stgMainMenuSelectedPos = 1;
+		bpMenu = 0;
+		ClrScreenFlag = 1;
+		 
+		keys = 0xFF;
+		
+		pMenu = settingMode_DTCList_Sub_Menu;
+		
+		hal_Oled_Clear();
+		hal_Oled_ShowString(40,0,"Dtc List",12,1);
+		hal_Oled_Refresh();
+		
+		//逐个判断，把配对的探测器都找出来
+		for(i=0; i<PARA_DTC_SUM; i++)
+		{
+			if(CheckPresenceofDtc(i))
+			{
+				GetDtcStu(&tStuDtc,i);
+				(pMenu+pMenuIdx)->ID = pMenuIdx;
+				//(pMenu+0)->ID = 0;
+				
+				(pMenu+pMenuIdx)->menuPos = STG_SUB_3_MENU_POS;
+				(pMenu+pMenuIdx)->reserved = tStuDtc.ID-1;
+				//StuDTCtemp[pMenuIdx].ID = tStuDtc.ID;
+				for(j=0; j<16; j++)
+				{
+				//	StuDTCtemp[pMenuIdx].Name[j] = tStuDtc.Name[j];
+					DtcNameBuff[pMenuIdx][j] = tStuDtc.Name[j];
+				}
+			 
+				//(pMenu+pMenuIdx)->pModeType = StuDTCtemp[pMenuIdx].Name;
+				
+				(pMenu+pMenuIdx)->pModeType = DtcNameBuff[pMenuIdx];
+				pMenuIdx++;
+			}
+		}
+		
+		if(pMenuIdx != 0)
+		{
+			//有探测器存在的情况
+			if(pMenuIdx > 1)
+			{
+				pMenu->pLase =  pMenu+(pMenuIdx-1);
+				pMenu->pNext =  pMenu+1;
+				pMenu->pParent = &settingModeMenu[STG_MENU_MAIN_SETTING];
+				for(i=1; i<pMenuIdx-1; i++)
+				{
+					(pMenu+i)->pLase =  pMenu+(i-1);
+					(pMenu+i)->pNext = pMenu+(i+1);
+					(pMenu+i)->pParent = &settingModeMenu[STG_MENU_MAIN_SETTING];
+				}
+				(pMenu+(pMenuIdx-1))->pLase =  pMenu+(i-1);
+				(pMenu+(pMenuIdx-1))->pNext = pMenu;
+				(pMenu+(pMenuIdx-1))->pParent = &settingModeMenu[STG_MENU_MAIN_SETTING];
+			}else if(pMenuIdx == 1)
+			{
+
+				pMenu->pLase = pMenu;
+				pMenu->pNext = pMenu;
+				pMenu->pParent = &settingModeMenu[STG_MENU_MAIN_SETTING];
+			}
+		}else
+		{
+			//没有探测器
+			bpMenu = pMenu;
+			hal_Oled_ShowString(0,14," No detectors.",8,1);
+			hal_Oled_Refresh();
+		}
+
+		MHead = pMenu;			//记录当前显示菜单第一项
+		if(pMenuIdx < 2)
+		{
+			MTail = pMenu;
+		}else if(pMenuIdx < 5)
+		{
+			MTail = pMenu+(pMenuIdx-1);
+		}else
+		{
+			MTail = pMenu+3;		//记录当前显示菜单最后一项,一页显示4行
+		}
+		
+	}else if(pModeMenu->refreshScreenCmd==SCREEN_CMD_RECOVER)
+	{	
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+		//恢复之前的选择位置显示
+		hal_Oled_Clear();
+		hal_Oled_ShowString(40,0,"Dtc List",12,1);
+		hal_Oled_Refresh();
+		keys = 0xFF;
+		ClrScreenFlag = 1;
+		bpMenu = 0;
+		
+	}
+	
+	if(pModeMenu->keyVal != 0xff)
+	{
+		keys = pModeMenu->keyVal;
+		pModeMenu->keyVal = 0xFF;	//恢复菜单按键值
+		switch(keys)
+		{
+			case KEY1_CLICK_RELEASE:		//上
+				if(pMenuIdx < 2)
+				{
+					//只有一个探测器不做处理
+				}else if(pMenuIdx < 5)
+				{
+					//只有一页，也就是只有4个探测器的时候
+					if(stgMainMenuSelectedPos ==1)	//判断是否选中的是第一行
+					{
+						//头尾指针不变，只把当前菜单指向上一个
+						stgMainMenuSelectedPos = pMenuIdx;
+						ClrScreenFlag = 1;
+						pMenu = pMenu->pLase;
+						
+					}else 
+					{
+						//不清屏，直接刷新局部显示
+						hal_Oled_ShowString(0,14*stgMainMenuSelectedPos,pMenu->pModeType,8,1);		//取消选中本菜单显示
+						hal_Oled_Refresh();
+						pMenu = pMenu->pLase;
+						stgMainMenuSelectedPos--;
+					}
+				}else if(pMenuIdx > 4)	//当前探测器超过4个
+				{
+					if(stgMainMenuSelectedPos ==1)	//判断是否选中的是第一行
+					{
+						MHead = MHead->pLase;
+						pMenu = pMenu->pLase;
+						MTail = MTail->pLase;
+						stgMainMenuSelectedPos = 1;
+						ClrScreenFlag = 1;
+					}else
+					{
+						hal_Oled_ShowString(0,14*stgMainMenuSelectedPos,pMenu->pModeType,8,1);		//取消选中本菜单显示
+						hal_Oled_Refresh();
+						pMenu = pMenu->pLase;
+						stgMainMenuSelectedPos--;
+					}
+				}
+			break;
+			
+			case KEY2_CLICK_RELEASE:		//下 
+				if(pMenuIdx < 2)
+				{
+					//只有一个探测器不做处理
+				}else if(pMenuIdx < 5)
+				{
+					//只有一页，也就是只有4个探测器的时候
+					if(stgMainMenuSelectedPos ==pMenuIdx)	//判断是否选中的是第4行
+					{
+						//头尾指针不变，只把当前菜单指向下个
+						pMenu = pMenu->pNext;
+						stgMainMenuSelectedPos = 1;
+						ClrScreenFlag = 1;
+						
+					}else 
+					{
+						//不清屏，直接刷新局部显示
+						hal_Oled_ShowString(0,14*stgMainMenuSelectedPos,pMenu->pModeType,8,1);		//取消选中本菜单显示
+						hal_Oled_Refresh();
+						pMenu = pMenu->pNext;																			//切换下一个选项
+						stgMainMenuSelectedPos++;
+					}
+				}else if(pMenuIdx > 4)	//当前探测器超过4个
+				{
+					if(stgMainMenuSelectedPos ==4)	//判断是否选中的是第一行
+					{
+						MHead = MHead->pNext;	
+						pMenu = pMenu->pNext;
+						MTail = pMenu;
+						stgMainMenuSelectedPos = 4;
+						ClrScreenFlag = 1;
+					}else
+					{
+						hal_Oled_ShowString(0,14*stgMainMenuSelectedPos,pMenu->pModeType,8,1);		//取消选中本菜单显示
+						hal_Oled_Refresh();
+						pMenu = pMenu->pNext;																			//切换下一个选项
+						stgMainMenuSelectedPos++;
+					}
+				}
+			break;
+			
+			case KEY6_CLICK_RELEASE:			//确定
+				if(pMenuIdx>0)
+				{
+					pModeMenu = &DL_ZX_Review[STG_MENU_DL_ZX_REVIEW_MAIN]; 
+					pModeMenu->reserved = pMenu->reserved;	//这里用于传递后面要查看、修改、删除探测器的ID号
+					pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+				}
+			break;
+			
+			case KEY5_CLICK_RELEASE:	//取消
+				pModeMenu = pModeMenu->pParent;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+			break;
+			case KEY5_LONG_PRESS:		//返回桌面
+				pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+			break;
+			
+		}
+	}
+	
+	if(bpMenu != pMenu)
+	{
+		bpMenu = pMenu;
+		if(ClrScreenFlag)
+		{
+			ClrScreenFlag = 0;
+			pMenu = MHead;
+			hal_Oled_ClearArea(0,14,128,50);		//清屏
+			hal_Oled_Refresh();
+			if(pMenuIdx <4)
+			{
+				for(i=0; i<pMenuIdx; i++)
+				{
+					hal_Oled_ShowString(0,14*(i+1),pMenu->pModeType,8,1);
+					hal_Oled_Refresh();
+					pMenu = pMenu->pNext;
+				}
+			}else
+			{
+				for(i=1; i<5; i++)
+				{
+					hal_Oled_ShowString(0,14*i,pMenu->pModeType,8,1);
+					hal_Oled_Refresh();
+					pMenu = pMenu->pNext;
+				} 
+			}
+			pMenu = bpMenu;
+			hal_Oled_ShowString(0,14*stgMainMenuSelectedPos,pMenu->pModeType,8,0);
+			hal_Oled_Refresh();
+			 
+		}else
+		{ 
+			hal_Oled_ShowString(0,14*stgMainMenuSelectedPos,pMenu->pModeType,8,0);	
+			hal_Oled_Refresh();
+			
+		}	
+	} 
+
+}
+
+static void stgMenu_dl_ReviewMainCBS(void)
+{
+	
+}
+
+static void stgMenu_dl_ReviewCBS(void)
+{
+
+}
+static void stgMenu_dl_EditCBS(void)
+{
+
+}
+static void stgMenu_dl_DeleteCBS(void)
+{
+
 }
 
 //wifi配网菜单处理函数
