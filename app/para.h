@@ -38,5 +38,6 @@ void Para_Init(void);
 unsigned char AddDtc(Stu_DTC *pDevPara);
 void GetDtcStu(Stu_DTC *pdDevPara, unsigned char idx);
 unsigned char CheckPresenceofDtc(unsigned char i);
+void SetDtcAbt(unsigned char id,Stu_DTC *psDevPara);
 
 #endif

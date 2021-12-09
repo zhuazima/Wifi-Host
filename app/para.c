@@ -198,3 +198,33 @@ unsigned char AddDtc(Stu_DTC *pDevPara)
 	return 0xFF;			//学习失败
 }
 
+
+
+//修改探测器属性,id->指定探测器idx psDevPara->探测器属性结构体
+void SetDtcAbt(unsigned char id,Stu_DTC *psDevPara)
+{
+	unsigned char i;
+	if(id >= PARA_DTC_SUM)		
+	{
+		return;			//id异常
+	}
+	dERP[id].ID = psDevPara->ID;
+	dERP[id].Mark = psDevPara->Mark ;
+	dERP[id].NameNum =  psDevPara->NameNum;
+	
+	for(i=0; i<16; i++)
+	{
+		dERP[id].Name[i] = psDevPara->Name[i];
+	}
+	dERP[id].DTCType = psDevPara->DTCType;
+	dERP[id].ZoneType = psDevPara->ZoneType;
+	
+	
+
+	dERP[id].Code[0] = psDevPara->Code[0];
+	dERP[id].Code[1] = psDevPara->Code[1];
+	dERP[id].Code[2] = psDevPara->Code[2];
+	
+	I2C_PageWrite(STU_DEVICEPARA_OFFSET+id*STU_DTC_SIZE,(unsigned char*)psDevPara,STU_DTC_SIZE); //新设备信息写入EEPROM
+	I2C_Read(STU_DEVICEPARA_OFFSET+id*STU_DTC_SIZE,(unsigned char*)&dERP[id],STU_DTC_SIZE);
+}

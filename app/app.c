@@ -1038,11 +1038,317 @@ static void HexToAscii(unsigned char *pHex, unsigned char *pAscii, int nLen)
 
 static void stgMenu_dl_EditCBS(void)
 {
+	unsigned char keys = 0xFF;
+	static Stu_DTC tStuDtc;
+	static unsigned short timer = 0;
+	static unsigned char editComplete = 0;
+
+	static unsigned char *pDL_ZX_Edit_DTCType_Val[DTC_TYP_SUM] =
+	{
+		"door dtc",
+		"pir dtc",
+		"remote",
+	};
+
+	static unsigned char *pDL_ZX_Edit_ZoneType_Val[STG_DEV_AT_SUM] =
+	{
+		"24 hrs",
+		"1ST",
+		"2ND",
+	};
+	static unsigned char stgMainMenuSelectedPos=0;
+	static unsigned char setValue = DTC_DOOR;
+
+	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
+	{	//执行页面切换时屏幕刷新显示 
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+		stgMainMenuSelectedPos = 0; 
+		if(CheckPresenceofDtc(pModeMenu->reserved))
+		{
+			GetDtcStu(&tStuDtc,pModeMenu->reserved);
+		}
+		 
+		stgMainMenuSelectedPos = 0;
+		setValue = tStuDtc.DTCType;
+		hal_Oled_Clear();
+		hal_Oled_ShowString(40,0,pModeMenu->pModeType,12,1);
+		hal_Oled_Refresh();
+		
+		hal_Oled_ShowString(0,16,"<Name>: ",8,1); 
+		hal_Oled_ShowString(48,16,tStuDtc.Name,8,1);
+		
+		hal_Oled_ShowString(0,28,"<Type>: ",8,1);
+		hal_Oled_Refresh();
+		
+		if(tStuDtc.DTCType == DTC_DOOR)
+		{
+			hal_Oled_ShowString(48,28,"door dtc",8,0);
+		}else if(tStuDtc.DTCType == DTC_PIR_MOTION)
+		{
+			hal_Oled_ShowString(48,28,"pir dtc",8,0);
+		}else if(tStuDtc.DTCType == DTC_REMOTE)
+		{
+			hal_Oled_ShowString(48,28,"remote",8,0);
+		}
+		hal_Oled_Refresh();
+		
+		hal_Oled_ShowString(0,40,"<ZoneType>: ",8,1);
+		hal_Oled_Refresh();
+		
+		if(tStuDtc.ZoneType == ZONE_TYP_24HOURS)
+		{
+			hal_Oled_ShowString(72,40,"24 hrs",8,1);
+		}else if(tStuDtc.ZoneType == ZONE_TYP_1ST)
+		{
+			hal_Oled_ShowString(72,40,"1ST",8,1);
+		}else if(tStuDtc.ZoneType == ZONE_TYP_2ND)
+		{
+			hal_Oled_ShowString(72,40,"2ND",8,1);
+		}
+		
+		hal_Oled_Refresh();
+		 
+		editComplete = 0;
+		timer = 0;
+	}
+	
+
+	if(editComplete == 0)
+	{
+		if(pModeMenu->keyVal != 0xff)
+		{
+			keys = pModeMenu->keyVal;
+			pModeMenu->keyVal = 0xFF;	//恢复菜单按键值
+			if(keys == KEY3_CLICK_RELEASE)
+			{
+				if(stgMainMenuSelectedPos == 0)		
+				{
+					//设置Type
+					if(setValue == DTC_DOOR)
+					{
+						setValue = DTC_TYP_SUM-1;
+					}else
+					{
+						setValue--;
+					}
+					tStuDtc.DTCType = (DTC_TYPE_TYPEDEF)setValue;			//更新探测器参数
+					hal_Oled_ClearArea(48,28,80,8);		//清屏
+					hal_Oled_ShowString(48,28,pDL_ZX_Edit_DTCType_Val[setValue],8,0);
+					hal_Oled_Refresh();
+
+				}else if(stgMainMenuSelectedPos == 1)
+				{
+					//设置Zone type
+					if(setValue == ZONE_TYP_24HOURS)
+					{
+						setValue = STG_DEV_AT_SUM-1;
+					}else
+					{
+						setValue--;
+					}
+					tStuDtc.ZoneType = (ZONE_TYPED_TYPEDEF)setValue;			////更新探测器参数
+					hal_Oled_ClearArea(72,40,56,8);		//清屏
+					hal_Oled_ShowString(72,40,pDL_ZX_Edit_ZoneType_Val[setValue],8,0);
+					hal_Oled_Refresh();
+				}
+			}else if(keys == KEY4_CLICK_RELEASE)
+			{
+				if(stgMainMenuSelectedPos == 0)
+				{
+					//设置Type
+					if(setValue == (DTC_TYP_SUM-1))
+					{
+						setValue = 0;
+					}else
+					{
+						setValue++;
+					}
+					tStuDtc.DTCType = (DTC_TYPE_TYPEDEF)setValue;			//更新探测器参数
+					hal_Oled_ClearArea(48,28,80,8);		//清屏
+					hal_Oled_ShowString(48,28,pDL_ZX_Edit_DTCType_Val[setValue],8,0);
+					hal_Oled_Refresh();
+				}else if(stgMainMenuSelectedPos == 1)
+				{
+					//设置Zone type
+					if(setValue == (STG_DEV_AT_SUM-1))
+					{
+						setValue = 0;
+					}else
+					{
+						setValue++;
+					}
+					tStuDtc.ZoneType = (ZONE_TYPED_TYPEDEF)setValue;			////更新探测器参数
+					hal_Oled_ClearArea(72,40,56,8);		//清屏
+					hal_Oled_ShowString(72,40,pDL_ZX_Edit_ZoneType_Val[setValue],8,0);
+					hal_Oled_Refresh();
+				}
+				
+			}else if((keys==KEY1_CLICK_RELEASE) || (keys==KEY2_CLICK_RELEASE))
+			{
+				if(stgMainMenuSelectedPos == 0)
+				{
+					stgMainMenuSelectedPos = 1;
+					setValue = tStuDtc.ZoneType;
+					hal_Oled_ClearArea(48,28,80,8);		//清屏
+					hal_Oled_ShowString(48,28,pDL_ZX_Edit_DTCType_Val[tStuDtc.DTCType],8,1);	//恢复探测器类型未选中显示
+
+					hal_Oled_ClearArea(72,40,56,8);		//清屏
+
+					hal_Oled_ShowString(72,40,pDL_ZX_Edit_ZoneType_Val[setValue],8,0);			//切换选中菜单到防区类型
+					hal_Oled_Refresh();
+				}else
+				{
+					stgMainMenuSelectedPos = 0;
+					setValue = tStuDtc.DTCType;
+					hal_Oled_ClearArea(48,28,80,8);		//清屏
+					hal_Oled_ShowString(48,28,pDL_ZX_Edit_DTCType_Val[setValue],8,0);		//切换选中菜单到探测器类型
+					
+					
+					hal_Oled_ClearArea(72,40,56,8);		//清屏
+					hal_Oled_ShowString(72,40,pDL_ZX_Edit_ZoneType_Val[tStuDtc.ZoneType],8,1);	//恢复探测器防区类型未选中显示
+					
+					hal_Oled_Refresh();
+				}
+			}else if(keys == KEY5_CLICK_RELEASE)
+			{
+				pModeMenu = &DL_ZX_Review[STG_MENU_DL_ZX_REVIEW_MAIN];
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+					
+			}else if(keys == KEY6_CLICK_RELEASE)
+			{
+				timer = 0;
+				SetDtcAbt(tStuDtc.ID-1,&tStuDtc);		//更新探测器属性，带写入EEPROM功能
+				editComplete = 1;
+				hal_Oled_Clear();
+				hal_Oled_ShowString(16,20,"Update..",24,1);
+				hal_Oled_Refresh();	 
+			}else if(keys == KEY5_LONG_PRESS)
+			{
+				pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+			}
+			
+			
+		}
+	}
+	if(editComplete)
+	{
+		timer++;
+		if(timer > 150)		//1.5秒自动退出
+		{
+			timer = 0;
+			editComplete = 0;
+			pModeMenu = &DL_ZX_Review[STG_MENU_DL_ZX_REVIEW_MAIN];
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+		}
+	}
 
 }
+
 static void stgMenu_dl_DeleteCBS(void)
 {
+	unsigned char keys = 0xFF;
+	static Stu_DTC tStuDtc;
+	static unsigned short timer = 0;
+	static unsigned char DelComplete = 0;
+	
+	static unsigned char stgMainMenuSelectedPos=0;
 
+	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
+	{	//执行页面切换时屏幕刷新显示 
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+		stgMainMenuSelectedPos = 0; 
+		if(CheckPresenceofDtc(pModeMenu->reserved))
+		{
+			GetDtcStu(&tStuDtc,pModeMenu->reserved);
+		}
+		 
+		stgMainMenuSelectedPos = 0;
+		
+		hal_Oled_Clear();
+		hal_Oled_ShowString(46,0,pModeMenu->pModeType,12,1);
+		
+		//del zone-001
+		hal_Oled_ShowString(28,14,"Del ",12,1); 
+		hal_Oled_ShowString(52,14,tStuDtc.Name,12,1); 
+		
+		
+		hal_Oled_ShowString(25,28,"Are you sure?",12,1); 
+		//yes   no
+		hal_Oled_ShowString(40,48,"Yes",12,1); 
+		hal_Oled_ShowString(88,48,"No",12,0); 
+		
+		
+		hal_Oled_Refresh();
+		
+ 
+		 
+		DelComplete = 0;
+		timer = 0;
+	}
+	
+	if(pModeMenu->keyVal != 0xff)
+	{
+		keys = pModeMenu->keyVal;
+		pModeMenu->keyVal = 0xFF;	//恢复菜单按键值
+		
+		if((keys == KEY3_CLICK_RELEASE) || (keys == KEY4_CLICK_RELEASE))
+		{
+			if(stgMainMenuSelectedPos == 0)		
+			{
+				stgMainMenuSelectedPos = 1;
+				hal_Oled_ClearArea(40,48,88,16);		//清屏
+				hal_Oled_ShowString(40,48,"Yes",12,0); 
+				hal_Oled_ShowString(88,48,"No",12,1); 
+				hal_Oled_Refresh();
+
+			}else if(stgMainMenuSelectedPos == 1)
+			{
+				stgMainMenuSelectedPos = 0;
+				hal_Oled_ClearArea(40,48,88,16);		//清屏
+				hal_Oled_ShowString(40,48,"Yes",12,1); 
+				hal_Oled_ShowString(88,48,"No",12,0); 
+				hal_Oled_Refresh();
+ 
+			}
+		}else if(keys == KEY6_CLICK_RELEASE)
+		{
+			if(stgMainMenuSelectedPos)
+			{
+				//确认删除
+				DelComplete = 1;
+				timer = 0;
+				tStuDtc.Mark = 0;
+				SetDtcAbt(tStuDtc.ID-1,&tStuDtc);		//更新探测器属性，带写入EEPROM功能
+				hal_Oled_Clear();
+				hal_Oled_ShowString(16,20,"Update..",24,1);
+				hal_Oled_Refresh();	
+			}else
+			{
+				pModeMenu = pModeMenu->pParent;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER; 
+			}
+		}else if(keys == KEY5_CLICK_RELEASE)
+		{
+			pModeMenu = &DL_ZX_Review[STG_MENU_DL_ZX_REVIEW_MAIN];
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+		}else if(keys == KEY5_LONG_PRESS)
+		{
+			pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];;
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+		}
+	}
+	if(DelComplete)
+	{
+		timer++;
+		if(timer > 150)		//1.5秒自动退出
+		{
+			timer = 0;
+			DelComplete = 0;
+			pModeMenu = &settingModeMenu[STG_MENU_DTC_LIST];
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+		}
+	}
 }
 
 //wifi配网菜单处理函数
