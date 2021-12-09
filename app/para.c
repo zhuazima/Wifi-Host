@@ -34,7 +34,6 @@ unsigned char CheckPresenceofDtc(unsigned char i)
 	return result;
 }
 
-
 //获取指定探测器的结构体数据,*pdDevPara-外部结构体指针，idx-要获取的探测器结构体数组下标
 void GetDtcStu(Stu_DTC *pdDevPara, unsigned char idx)
 {
@@ -63,6 +62,7 @@ void GetDtcStu(Stu_DTC *pdDevPara, unsigned char idx)
 	pdDevPara->Code[1] = dERP[idx].Code[1];
 	pdDevPara->Code[2] = dERP[idx].Code[2];
 }
+
 
 
 void FactoryReset(void)

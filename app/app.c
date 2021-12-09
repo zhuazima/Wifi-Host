@@ -35,6 +35,7 @@ static void stgMenu_dl_EditCBS(void);
 static void stgMenu_dl_DeleteCBS(void);
 static void stgMenu_dl_ReviewCBS(void);
 static void stgMenu_dl_ReviewMainCBS(void);
+static void HexToAscii(unsigned char *pHex, unsigned char *pAscii, int nLen);
 
 //初始化桌面菜单
 stu_mode_menu generalModeMenu[GNL_MENU_SUM] =
@@ -211,10 +212,27 @@ void Menu_Init(void)
 	settingModeMenu[STG_MENU_SUM-1].pLase = &settingModeMenu[i-1];
 	settingModeMenu[STG_MENU_SUM-1].pNext = &settingModeMenu[1];
 	settingModeMenu[STG_MENU_SUM-1].pParent = &settingModeMenu[STG_MENU_MAIN_SETTING];
+
+
+	DL_ZX_Review[1].pLase = &DL_ZX_Review[STG_MENU_DL_ZX_SUM-1];
+	DL_ZX_Review[1].pNext = &DL_ZX_Review[2];
+	DL_ZX_Review[1].pParent = &DL_ZX_Review[STG_MENU_DL_ZX_REVIEW_MAIN];
+	for(i=2; i<STG_MENU_DL_ZX_SUM-1; i++)
+	{
+		DL_ZX_Review[i].pLase = &DL_ZX_Review[i-1];
+		DL_ZX_Review[i].pNext = &DL_ZX_Review[i+1];
+		DL_ZX_Review[i].pParent = &DL_ZX_Review[STG_MENU_DL_ZX_REVIEW_MAIN];
+	}
+	DL_ZX_Review[STG_MENU_DL_ZX_SUM-1].pLase = &DL_ZX_Review[i-1];
+	DL_ZX_Review[STG_MENU_DL_ZX_SUM-1].pNext = &DL_ZX_Review[1];
+	DL_ZX_Review[STG_MENU_DL_ZX_SUM-1].pParent = &DL_ZX_Review[STG_MENU_DL_ZX_REVIEW_MAIN];
 	
 
 	pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];	//设置上电显示的菜单界面为桌面显示
 	pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;	//更新刷新界面标志，进入界面后刷新全界面UI
+
+
+
 
 }
 
@@ -286,6 +304,18 @@ static void stgMenu_MainMenuCBS(void)
 		stgMainMenuSelectedPos = 1;
 		keys = 0xFF;
  
+	}
+	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RECOVER)
+	{
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+		//恢复之前的选择位置显示
+		hal_Oled_Clear();
+		
+		hal_Oled_ShowString(37,0,settingModeMenu[0].pModeType,12,1);
+		hal_Oled_Refresh();
+		keys = 0xFF;
+		ClrScreenFlag = 1;
+		bpMenu = 0;
 	}
 	if(pModeMenu->keyVal != 0xff)
 	{
@@ -715,7 +745,7 @@ static void stgMenu_DTCListCBS(void)
 				pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
 			break;
 			case KEY5_LONG_PRESS:		//返回桌面
-				pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];;
+				pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];
 				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
 			break;
 			
@@ -764,13 +794,248 @@ static void stgMenu_DTCListCBS(void)
 
 static void stgMenu_dl_ReviewMainCBS(void)
 {
+	unsigned char keys = 0xFF;
+	unsigned char i,ClrScreenFlag=0;
+	Stu_DTC tStuDtc;
+	 
+	static stu_mode_menu *MHead;		//这两个结构用来方便显示，页面的头跟尾
+	static stu_mode_menu *pMenu,*bpMenu=0;	//用来记录当前选中的菜单
 	
+	static unsigned char stgMainMenuSelectedPos=0;				 
+
+	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
+	{	//执行页面切换时屏幕刷新显示 
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+		
+		if(CheckPresenceofDtc(pModeMenu->reserved))
+		{
+			GetDtcStu(&tStuDtc,pModeMenu->reserved);	//读取探测器信息
+		}
+		 
+		 
+		hal_Oled_Clear();
+		hal_Oled_ShowString(40,0,tStuDtc.Name,12,1);
+		
+		hal_Oled_Refresh();
+		
+
+		pMenu = &DL_ZX_Review[1];
+		stgMainMenuSelectedPos = 1;
+		MHead = pMenu;			//记录当前显示菜单第一项
+		ClrScreenFlag = 1;
+		bpMenu = 0;
+		keys = 0xFF;
+	}else if(pModeMenu->refreshScreenCmd==SCREEN_CMD_RECOVER)
+	{
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+		//恢复之前的选择位置显示
+		if(CheckPresenceofDtc(pModeMenu->reserved))
+		{
+			GetDtcStu(&tStuDtc,pModeMenu->reserved);	//读取探测器信息
+		}
+		 
+		 
+		hal_Oled_Clear();
+		hal_Oled_ShowString(40,0,tStuDtc.Name,12,1);
+		
+		hal_Oled_Refresh();
+		keys = 0xFF;
+		ClrScreenFlag = 1;
+		bpMenu = 0;
+	}
+	if(pModeMenu->keyVal != 0xff)
+	{
+		keys = pModeMenu->keyVal;
+		pModeMenu->keyVal = 0xFF;	//恢复菜单按键值
+		switch(keys)
+		{
+			case KEY1_CLICK:		//上
+				if(stgMainMenuSelectedPos ==1)
+				{
+					pMenu = pMenu->pLase;
+					stgMainMenuSelectedPos = 3;
+					ClrScreenFlag = 1;
+				}else
+				{
+					hal_Oled_ShowString(0,14*stgMainMenuSelectedPos,pMenu->pModeType,8,1);		//取消选中本菜单显示
+					hal_Oled_Refresh();
+					pMenu = pMenu->pLase;
+					stgMainMenuSelectedPos--;
+				}
+			break;
+			case KEY2_CLICK:		//下
+				if(stgMainMenuSelectedPos ==3)
+				{
+					pMenu = pMenu->pNext;
+					stgMainMenuSelectedPos = 1;
+					ClrScreenFlag = 1;
+				}else
+				{
+					hal_Oled_ShowString(0,14*stgMainMenuSelectedPos,pMenu->pModeType,8,1);		//取消选中本菜单显示
+					hal_Oled_Refresh();
+					pMenu = pMenu->pNext;																			//切换下一个选项
+					stgMainMenuSelectedPos++;
+				}
+			
+				
+			break;
+			
+			case KEY6_CLICK_RELEASE:
+				pMenu->reserved = pModeMenu->reserved;	//继续把指定探测器结构体数组下标传递下去
+				pModeMenu = pMenu;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+			break;
+			
+			case KEY5_CLICK_RELEASE:
+				pModeMenu = &settingModeMenu[STG_MENU_DTC_LIST];	//这里不能直接返回父级，因为探测器个数是动态的，父级没初始化
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+			break;
+			case KEY5_LONG_PRESS:
+				pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+			break;
+		}
+	}
+	
+	if(bpMenu != pMenu)
+	{
+		bpMenu = pMenu;
+		if(ClrScreenFlag)
+		{
+			ClrScreenFlag = 0;
+			pMenu = MHead;
+			hal_Oled_ClearArea(0,14,128,50);		//清屏
+			hal_Oled_Refresh();
+			for(i=0; i<3; i++)
+			{
+				hal_Oled_ShowString(0,14*(i+1),pMenu->pModeType,8,1);
+				hal_Oled_Refresh();
+				pMenu = pMenu->pNext;
+			} 
+			pMenu = bpMenu;
+			hal_Oled_ShowString(0,14*stgMainMenuSelectedPos,pMenu->pModeType,8,0);
+			hal_Oled_Refresh();
+			 
+		}else
+		{ 
+			hal_Oled_ShowString(0,14*stgMainMenuSelectedPos,pMenu->pModeType,8,0);	
+			hal_Oled_Refresh();
+		}		 
+	}
 }
 
 static void stgMenu_dl_ReviewCBS(void)
 {
+	unsigned char keys = 0xFF;
+	Stu_DTC tStuDtc;
+	unsigned char temp[6];
+	
+	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
+	{	//执行页面切换时屏幕刷新显示 
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+		 
+		if(CheckPresenceofDtc(pModeMenu->reserved))
+		{
+			GetDtcStu(&tStuDtc,pModeMenu->reserved);
+		}
+		 
+ 
+		hal_Oled_Clear();
+		hal_Oled_ShowString(40,0,pModeMenu->pModeType,12,1);
+		
+		hal_Oled_ShowString(0,16,"<Name>: ",8,1); 
+		//<Name>: 8个字符，8*6=48
+		hal_Oled_ShowString(48,16,tStuDtc.Name,8,1);
+		
+		hal_Oled_ShowString(0,28,"<Type>: ",8,1);
+		
+		if(tStuDtc.DTCType == DTC_DOOR)
+		{
+			hal_Oled_ShowString(48,28,"door dtc",8,1);
+		}else if(tStuDtc.DTCType == DTC_PIR_MOTION)
+		{
+			hal_Oled_ShowString(48,28,"pir dtc",8,1);
+		}else if(tStuDtc.DTCType == DTC_REMOTE)
+		{
+			hal_Oled_ShowString(48,28,"remote",8,1);
+		}
+		
+		hal_Oled_ShowString(0,40,"<ZoneType>: ",8,1);
+		
+		if(tStuDtc.ZoneType == ZONE_TYP_24HOURS)
+		{
+			hal_Oled_ShowString(72,40,"24 hrs",8,1);
+		}else if(tStuDtc.ZoneType == ZONE_TYP_1ST)
+		{
+			hal_Oled_ShowString(72,40,"1ST",8,1);
+		}else if(tStuDtc.ZoneType == ZONE_TYP_2ND)
+		{
+			hal_Oled_ShowString(72,40,"2ND",8,1);
+		}
+		
+		hal_Oled_ShowString(0,52,"<RFCode>: ",8,1);
+		HexToAscii(tStuDtc.Code,temp,3);
+		
+		hal_Oled_ShowChar(60,52,temp[4],8,1);
+		hal_Oled_ShowChar(66,52,temp[5],8,1);
+		
+		hal_Oled_ShowChar(72,52,' ',8,1);
+		
+		hal_Oled_ShowChar(80,52,temp[2],8,1);
+		hal_Oled_ShowChar(86,52,temp[3],8,1);
+		
+		hal_Oled_Refresh();
+		
+	}
+	
+	if(pModeMenu->keyVal != 0xff)
+	{
+		keys = pModeMenu->keyVal;
+		pModeMenu->keyVal = 0xFF;	//恢复菜单按键值
+		switch(keys)
+		{
+			case KEY5_CLICK_RELEASE:
+				pModeMenu = &DL_ZX_Review[STG_MENU_DL_ZX_REVIEW_MAIN];
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+				 
+			break;
+			case KEY6_CLICK_RELEASE:
+				pModeMenu = &DL_ZX_Review[STG_MENU_DL_ZX_REVIEW_MAIN];
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+			break;
+			case KEY5_LONG_PRESS:
+
+				pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+			break;
+			
+			
+		}
+	}
 
 }
+
+static void HexToAscii(unsigned char *pHex, unsigned char *pAscii, int nLen)
+{
+    unsigned char Nibble[2];
+    unsigned int i,j;
+    for (i = 0; i < nLen; i++){
+        Nibble[0] = (pHex[i] & 0xF0) >> 4;
+        Nibble[1] = pHex[i] & 0x0F;
+        for (j = 0; j < 2; j++){
+            if (Nibble[j] < 10){            
+                Nibble[j] += 0x30;
+            }
+            else{
+                if (Nibble[j] < 16)
+                    Nibble[j] = Nibble[j] - 10 + 'A';
+            }
+            *pAscii++ = Nibble[j];
+        }             
+    }          
+}
+
+
 static void stgMenu_dl_EditCBS(void)
 {
 

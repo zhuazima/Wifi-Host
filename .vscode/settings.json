@@ -11,6 +11,7 @@
         "hal_time.h": "c",
         "hal_cpu.h": "c",
         "hal_rfd.h": "c",
-        "hal_eeprom.h": "c"
+        "hal_eeprom.h": "c",
+        "para.h": "c"
     }
 }
