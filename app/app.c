@@ -19,6 +19,9 @@ LINK_STATE_TYPEDEF link_state;
 stu_system_time stuSystemtime;		//系统时间
 stu_mode_menu *pModeMenu;		//系统当前菜单
 
+unsigned char *pMcuVersions = "v2.8";		//这样子写的字符串只能赋值给指针
+unsigned char *pHardVersions = "v2.0";
+
 
 static void KeyEventHandle(KEY_VALUE_TYPEDEF keys);
 static void RfdRcvHandle(unsigned char *pBuff);
@@ -1354,11 +1357,112 @@ static void stgMenu_dl_DeleteCBS(void)
 //wifi配网菜单处理函数
 static void stgMenu_WifiCBS(void)
 {
+	static unsigned char stgMainMenuSelectedPos = 0;
+	static unsigned short timer = 0;
+	unsigned char keys;
+
+	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
+	{
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+	
+		hal_Oled_Clear();	 
+		hal_Oled_ShowString(52,0,"Wifi",12,1);
+		
+		 
+		hal_Oled_ShowString(0,20,"Are you sure to",8,1); 
+		hal_Oled_ShowString(0,30,"enter ap mode?",8,1);
+		 
+		
+		//yes   no
+		hal_Oled_ShowString(40,48,"Yes",12,1); 
+		hal_Oled_ShowString(88,48,"No",12,0); 
+		
+		hal_Oled_Refresh();
+		
+		keys = 0xFF;
+		timer = 0;
+
+		stgMainMenuSelectedPos = 0;
+	}
+	
+	if(pModeMenu->keyVal != 0xff)
+	{
+		keys = pModeMenu->keyVal;
+		pModeMenu->keyVal = 0xFF;	//恢复菜单按键值
+		
+		if((keys == KEY3_CLICK_RELEASE) 
+		|| (keys == KEY4_CLICK_RELEASE))
+		{
+			if(stgMainMenuSelectedPos == 0)		
+			{
+				stgMainMenuSelectedPos = 1;
+				hal_Oled_ClearArea(40,48,88,16);		//清屏
+				hal_Oled_ShowString(40,48,"Yes",12,0); 
+				hal_Oled_ShowString(88,48,"No",12,1); 
+
+				hal_Oled_Refresh();
+
+			}else if(stgMainMenuSelectedPos == 1)
+			{
+				stgMainMenuSelectedPos = 0;
+				hal_Oled_ClearArea(40,48,88,16);		//清屏
+				hal_Oled_ShowString(40,48,"Yes",12,1); 
+				hal_Oled_ShowString(88,48,"No",12,0); 
+				hal_Oled_Refresh();
+ 
+			}
+		}else if(keys == KEY5_CLICK_RELEASE)
+		{
+			pModeMenu = pModeMenu->pParent;
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+		}else if(keys == KEY5_LONG_PRESS)
+		{
+			pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];;
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+		}
+		 
+	}
 }
 
 //设备信息菜单处理函数
 static void stgMenu_MachineInfoCBS(void)
 {
+	unsigned char keys;
+ 
+	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
+	{
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+	
+		hal_Oled_Clear();	 //mac info
+		hal_Oled_ShowString(40,0,"Mac info",12,1);
+		
+		 
+		//v1.7
+		hal_Oled_ShowString(0,16,"<mcu ver>: ",12,1);
+		hal_Oled_ShowString(66,16,pMcuVersions,12,1);
+		
+		hal_Oled_ShowString(0,32,"<hard ver>: ",12,1);
+		hal_Oled_ShowString(72,32,pHardVersions,12,1);
+		hal_Oled_Refresh();
+		
+		keys = 0xFF;
+		 
+	}
+	
+	if(pModeMenu->keyVal != 0xff)
+	{
+		keys = pModeMenu->keyVal;
+		pModeMenu->keyVal = 0xFF;	//恢复菜单按键值
+		if(keys == KEY5_CLICK_RELEASE)
+		{
+			pModeMenu = pModeMenu->pParent;
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+		}else if(keys == KEY5_LONG_PRESS)
+		{
+			pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];;
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+		}
+	}
 }
 
 //恢复出厂设置菜单处理函数
