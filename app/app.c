@@ -1468,6 +1468,101 @@ static void stgMenu_MachineInfoCBS(void)
 //恢复出厂设置菜单处理函数
 static void stgMenu_FactorySettingsCBS(void)
 {
+	unsigned char keys = 0xFF;
+
+	static unsigned short timer = 0;
+	static unsigned char Complete = 0;
+	
+	static unsigned char stgMainMenuSelectedPos=0;
+
+
+	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
+	{	//执行页面切换时屏幕刷新显示 
+		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
+		stgMainMenuSelectedPos = 0; 
+	
+	
+		hal_Oled_Clear();
+		hal_Oled_ShowString(19,0,"Default setting",12,1);
+		
+		
+		hal_Oled_ShowString(25,28,"Are you sure?",12,1); 
+		//yes   no
+		hal_Oled_ShowString(40,48,"Yes",12,1); 
+		hal_Oled_ShowString(88,48,"No",12,0); 
+		
+		
+		hal_Oled_Refresh();
+		
+ 
+		 
+		Complete = 0;
+		timer = 0;
+	}
+	
+	if(pModeMenu->keyVal != 0xff)
+	{
+		keys = pModeMenu->keyVal;
+		pModeMenu->keyVal = 0xFF;	//恢复菜单按键值
+		if(!Complete)
+		{
+			if((keys == KEY3_CLICK_RELEASE) || (keys == KEY4_CLICK_RELEASE))
+			{
+				if(stgMainMenuSelectedPos == 0)		
+				{
+					stgMainMenuSelectedPos = 1;
+					hal_Oled_ClearArea(40,48,88,16);		//清屏
+					hal_Oled_ShowString(40,48,"Yes",12,0); 
+					hal_Oled_ShowString(88,48,"No",12,1); 
+					hal_Oled_Refresh();
+
+				}else if(stgMainMenuSelectedPos == 1)
+				{
+					stgMainMenuSelectedPos = 0;
+					hal_Oled_ClearArea(40,48,88,16);		//清屏
+					hal_Oled_ShowString(40,48,"Yes",12,1); 
+					hal_Oled_ShowString(88,48,"No",12,0); 
+					hal_Oled_Refresh();
+	 
+				}
+			}else if(keys == KEY6_CLICK_RELEASE)
+			{
+				if(stgMainMenuSelectedPos)
+				{
+					//确认 
+					Complete = 1;
+					timer = 0;
+					FactoryReset();		//调用复位EEPROM数据函数
+					hal_Oled_Clear();
+					hal_Oled_ShowString(16,20,"Update..",24,1);
+					hal_Oled_Refresh();	
+				}else
+				{
+					pModeMenu = pModeMenu->pParent;
+					pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER; 
+				}
+			}else if(keys == KEY5_CLICK_RELEASE)
+			{
+				pModeMenu = pModeMenu->pParent;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER; 
+			}else if(keys == KEY5_LONG_PRESS)
+			{
+				pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
+			}
+		}
+	}
+	if(Complete)
+	{
+		timer++;
+		if(timer > 150)		//1.5秒自动退出
+		{
+			timer = 0;
+			Complete = 0;
+			pModeMenu = pModeMenu->pParent;
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+		}
+	}
 }
 
 //-----------------驱动层回调处理函数------------------------
