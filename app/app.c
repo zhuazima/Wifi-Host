@@ -96,9 +96,11 @@ void AppInit(void)
 	Para_Init();
 	hal_BeepInit();
 	Menu_Init();
-	QueueEmpty(RFDRcvMsg);
 	hal_KeyScanCBSRegister(KeyEventHandle);
 	hal_RFCRcvCBSRegister(RfdRcvHandle);
+
+	QueueEmpty(RFDRcvMsg);
+	QueueEmpty(DtcTriggerIDMsg);
 
 	stuSystemtime.year = 2021;
 	stuSystemtime.mon = 12;
@@ -106,6 +108,9 @@ void AppInit(void)
 	stuSystemtime.hour = 21;
 	stuSystemtime.min = 23;
 	stuSystemtime.week = 6;
+
+	pStuSystemMode = &stu_Sysmode[SYSTEM_MODE_ENARM];
+
 
 }
 
@@ -193,6 +198,7 @@ void AppProc(void)
 {
 	
 	pModeMenu->action();
+
 
 }
 
@@ -325,19 +331,256 @@ static void S_ENArmModeProc(void)
 	}
 }
 
-static void S_DisArmModeProc(void)
-{
-
-}
-
 static void S_HomeArmModeProc(void)
 {
-
+	unsigned char tBuff[3],id,dat;
+	Stu_DTC tStuDtc;
+	if(pStuSystemMode->refreshScreenCmd == SCREEN_CMD_RESET)
+	{
+		pStuSystemMode->refreshScreenCmd = SCREEN_CMD_NULL;
+		pStuSystemMode->keyVal = 0xFF;
+		
+		 
+		hal_Oled_ClearArea(0,20,128,24);		//清防御模式文案
+		hal_Oled_ClearArea(0,12,128,8);		//清报警探测器文案
+		hal_Oled_ShowString(16,20,"Home Arm",24,1);
+		 
+		hal_Oled_Refresh();
+	}
+	
+	if(QueueDataLen(RFDRcvMsg))
+	{
+		QueueDataOut(RFDRcvMsg,&dat);
+		if(dat == '#')
+		{
+			QueueDataOut(RFDRcvMsg,&tBuff[2]);
+			QueueDataOut(RFDRcvMsg,&tBuff[1]);
+			QueueDataOut(RFDRcvMsg,&tBuff[0]);
+			id = DtcMatching(tBuff);		//探测器匹配
+			if(id != 0xFF)
+			{
+				//匹配到探测器
+				GetDtcStu(&tStuDtc,id-1);
+				 
+				if(tStuDtc.DTCType == DTC_REMOTE)
+				{
+					if(tBuff[0] == SENSOR_CODE_REMOTE_ENARM)
+					{
+						SystemMode_Change(SYSTEM_MODE_ENARM);	//遥控器控制离家布防
+					}else if(tBuff[0] == SENSOR_CODE_REMOTE_DISARM)
+					{
+						SystemMode_Change(SYSTEM_MODE_DISARM);	//遥控器控制撤防
+					}else if(tBuff[0] == SENSOR_CODE_REMOTE_HOMEARM)
+					{
+						SystemMode_Change(SYSTEM_MODE_HOMEARM);	//遥控器控制在家布防
+					}else if(tBuff[0] == SENSOR_CODE_REMOTE_SOS)
+					{
+						SystemMode_Change(SYSTEM_MODE_ALARM);	//遥控器触发SOS报警
+						QueueDataIn(DtcTriggerIDMsg, &id, 1);
+					}
+				}else if((tBuff[0]==SENSOR_CODE_DOOR_OPEN)
+				|| (tBuff[0]==SENSOR_CODE_DOOR_TAMPER)
+				|| (tBuff[0]==SENSOR_CODE_PIR)
+				|| (tBuff[0]==SENSOR_CODE_PIR_TAMPER))
+				{
+					if(tStuDtc.ZoneType==ZONE_TYP_24HOURS)
+					{
+						SystemMode_Change(SYSTEM_MODE_ALARM);	//探测器触发紧急报警
+						QueueDataIn(DtcTriggerIDMsg, &id, 1);
+					}else if(tStuDtc.ZoneType != ZONE_TYP_2ND)	//判断探测器是否非为在家防御模式
+					{
+						SystemMode_Change(SYSTEM_MODE_ALARM);	//探测器触发紧急报警
+						QueueDataIn(DtcTriggerIDMsg, &id, 1);
+					}
+				}
+				
+				 
+			}
+			
+		}
+		
+		
+	}
 }
-
+static void S_DisArmModeProc(void)
+{
+	unsigned char tBuff[3],id,dat;
+	Stu_DTC tStuDtc;
+	if(pStuSystemMode->refreshScreenCmd == SCREEN_CMD_RESET)
+	{
+		pStuSystemMode->refreshScreenCmd = SCREEN_CMD_NULL;
+		pStuSystemMode->keyVal = 0xFF;
+		
+		 
+		hal_Oled_ClearArea(0,20,128,24);		//清防御模式文案
+		hal_Oled_ClearArea(0,12,128,8);		//清报警探测器文案
+		hal_Oled_ShowString(28,20,"Disarm",24,1);
+		 
+		hal_Oled_Refresh();
+	}
+	
+	if(QueueDataLen(RFDRcvMsg))
+	{
+		QueueDataOut(RFDRcvMsg,&dat);
+		if(dat == '#')
+		{
+			QueueDataOut(RFDRcvMsg,&tBuff[2]);
+			QueueDataOut(RFDRcvMsg,&tBuff[1]);
+			QueueDataOut(RFDRcvMsg,&tBuff[0]);
+			id = DtcMatching(tBuff);		//探测器匹配
+			if(id != 0xFF)
+			{
+				//匹配到探测器
+				GetDtcStu(&tStuDtc,id-1);
+				 
+				if(tStuDtc.DTCType == DTC_REMOTE)
+				{
+					if(tBuff[0] == SENSOR_CODE_REMOTE_ENARM)
+					{
+						SystemMode_Change(SYSTEM_MODE_ENARM);	//遥控器控制离家布防
+					}else if(tBuff[0] == SENSOR_CODE_REMOTE_DISARM)
+					{
+						SystemMode_Change(SYSTEM_MODE_DISARM);	//遥控器控制撤防
+					}else if(tBuff[0] == SENSOR_CODE_REMOTE_HOMEARM)
+					{
+						SystemMode_Change(SYSTEM_MODE_HOMEARM);	//遥控器控制在家布防
+					}else if(tBuff[0] == SENSOR_CODE_REMOTE_SOS)
+					{
+						SystemMode_Change(SYSTEM_MODE_ALARM);	//遥控器触发SOS报警
+						QueueDataIn(DtcTriggerIDMsg, &id, 1);
+					}
+				}else if((tBuff[0]==SENSOR_CODE_DOOR_OPEN)
+				|| (tBuff[0]==SENSOR_CODE_DOOR_TAMPER)
+				|| (tBuff[0]==SENSOR_CODE_PIR)
+				|| (tBuff[0]==SENSOR_CODE_PIR_TAMPER))
+				{
+					if(tStuDtc.ZoneType==ZONE_TYP_24HOURS)
+					{
+						SystemMode_Change(SYSTEM_MODE_ALARM);	//探测器触发紧急报警
+						QueueDataIn(DtcTriggerIDMsg, &id, 1);
+					} 
+				}
+				 
+			}
+			
+		}
+		
+		
+	}
+}
 static void S_AlarmModeProc(void)
 {
-
+	static unsigned short timer = 0;
+	static unsigned short timer2 = 0;
+	static unsigned char displayAlarmFlag = 1;
+	unsigned char tBuff[3],id,dat;
+	Stu_DTC tStuDtc;
+	if(pStuSystemMode->refreshScreenCmd == SCREEN_CMD_RESET)
+	{
+		pStuSystemMode->refreshScreenCmd = SCREEN_CMD_NULL;
+		pStuSystemMode->keyVal = 0xFF;
+		
+		hal_Oled_ClearArea(0,20,128,24);		//清防御模式文案
+		hal_Oled_ClearArea(0,12,128,8);		//清报警探测器文案
+		hal_Oled_ShowString(16,20,"Alarming",24,1);
+		 
+		hal_Oled_Refresh();
+		displayAlarmFlag = 1;
+		timer = 0;
+		timer2 = 0;
+		
+	}
+	if(QueueDataLen(RFDRcvMsg))
+	{
+		QueueDataOut(RFDRcvMsg,&dat);
+		if(dat == '#')
+		{
+			QueueDataOut(RFDRcvMsg,&tBuff[2]);
+			QueueDataOut(RFDRcvMsg,&tBuff[1]);
+			QueueDataOut(RFDRcvMsg,&tBuff[0]);
+			id = DtcMatching(tBuff);		//探测器匹配
+			if(id != 0xFF)
+			{
+				//匹配到探测器
+				GetDtcStu(&tStuDtc,id-1);
+				
+				if(tStuDtc.DTCType == DTC_REMOTE)
+				{
+					if(tBuff[0] == SENSOR_CODE_REMOTE_DISARM)
+					{
+						SystemMode_Change(SYSTEM_MODE_DISARM);	//遥控器控制撤防
+					}else if(tBuff[0] == SENSOR_CODE_REMOTE_SOS)
+					{
+						QueueDataIn(DtcTriggerIDMsg, &id, 1);
+					}
+				}else if((tBuff[0]==SENSOR_CODE_DOOR_OPEN)
+				|| (tBuff[0]==SENSOR_CODE_DOOR_TAMPER)
+				|| (tBuff[0]==SENSOR_CODE_PIR)
+				|| (tBuff[0]==SENSOR_CODE_PIR_TAMPER))						//警戒模式下，防御等级最高，所有探测器触发都报警
+				{
+					QueueDataIn(DtcTriggerIDMsg, &id, 1);
+				} 	
+			}
+		}
+	}
+	
+	
+	if(QueueDataLen(DtcTriggerIDMsg) && (!timer))
+	{
+		QueueDataOut(DtcTriggerIDMsg,&id);
+		if(id > 0)
+		{
+			GetDtcStu(&tStuDtc,id-1); 
+			if(tStuDtc.DTCType == DTC_REMOTE)
+			{
+				//Remote:sos
+				hal_Oled_ClearArea(0,12,128,8);		//清报警探测器文案
+				hal_Oled_ShowString(34,12,"Remote:",8,1);
+				hal_Oled_ShowString(76,12,"sos",8,1);
+					
+			}
+			else if(tStuDtc.DTCType == DTC_DOOR)
+			{
+			//Door:Zone-001
+				hal_Oled_ClearArea(0,12,128,8);		//清报警探测器文案
+				hal_Oled_ShowString(25,12,"Door:",8,1);
+				hal_Oled_ShowString(55,12,tStuDtc.Name,8,1);	
+			}
+			
+			hal_Oled_Refresh();
+			timer = 1;
+		}
+	}
+	
+	if(timer)
+	{
+		timer++;
+		if(timer > 500)	//500*10ms=5000ms=5s
+		{
+			timer = 0;
+			hal_Oled_ClearArea(0,12,128,8);		//清报警探测器文案
+			hal_Oled_Refresh();
+		}
+	}
+	
+	timer2++;
+	if(timer2 > 49)	//50*10ms=500ms
+	{
+		timer2 = 0;
+		displayAlarmFlag = !displayAlarmFlag;
+		
+		 if(displayAlarmFlag)
+		 {
+			 //刷屏尽量不要太快，下面两个函数调用需要大约20ms时间
+			 hal_Oled_ShowString(16,20,"Alarming",24,1);	
+			 hal_Oled_Refresh();				
+			 
+		 }else
+		 {
+			 hal_Oled_ClearArea(0,20,128,24);		//清防御模式文案
+			 hal_Oled_Refresh();
+		 }
+	}
 }
 
 
@@ -377,6 +620,10 @@ static void gnlMenu_DesktopCBS(void)
 			break;
 		}
 	}
+
+
+	pStuSystemMode->action(); //=S_ENArmModeProc();//执行系统防线模式
+
 }
 
 
