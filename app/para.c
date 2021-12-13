@@ -137,6 +137,22 @@ static ParaCheck(void)
 
 
 
+unsigned char DtcMatching(unsigned char *pCode)
+{
+	unsigned char i=0;
+
+	for(i=0; i<PARA_DTC_SUM; i++)
+	{
+		if(dERP[i].Mark && 
+		(dERP[i].Code[1]==pCode[1]) &&
+		(dERP[i].Code[2]==pCode[2]))			//判断探测器是否存在
+		{				
+		 
+			return (dERP[i].ID);
+		} 
+	}
+	return 0xFF;
+}
 
 unsigned char AddDtc(Stu_DTC *pDevPara)
 {

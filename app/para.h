@@ -40,5 +40,6 @@ void GetDtcStu(Stu_DTC *pdDevPara, unsigned char idx);
 unsigned char CheckPresenceofDtc(unsigned char i);
 void SetDtcAbt(unsigned char id,Stu_DTC *psDevPara);
 void FactoryReset(void);
+unsigned char DtcMatching(unsigned char *pCode);
 
 #endif

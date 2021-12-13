@@ -97,6 +97,26 @@ typedef enum
 	STG_MENU_DL_ZX_SUM,
 }STG_MENU_DZ_ZX_LIST;
 
+//安防系统模式
+typedef enum 
+{
+	SYSTEM_MODE_ENARM,	//离家布放
+	SYSTEM_MODE_HOMEARM,		//在家布防
+	SYSTEM_MODE_DISARM,		//撤防
+	SYSTEM_MODE_ALARM,		//报警中
+	SYSTEM_MODE_SUM
+}SYSTEMMODE_TYPEDEF;
+
+
+typedef struct SYSTEM_MODE
+{
+	SYSTEMMODE_TYPEDEF ID;
+	SCREEN_CMD refreshScreenCmd;		//刷新屏显示命令
+	unsigned char keyVal;				//按键值,0xFF代表无按键触发
+	void (*action)(void);				//当前模式下的响应函数
+}stu_system_mode;
+
+
 
 
 typedef struct SYSTEM_TIME

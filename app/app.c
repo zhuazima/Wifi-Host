@@ -14,10 +14,14 @@
 
 
 Queue8 RFDRcvMsg;	//RFD接收队列
+Queue8 DtcTriggerIDMsg;	//触发的探测器ID队列
+
 LINK_STATE_TYPEDEF link_state;
 
 stu_system_time stuSystemtime;		//系统时间
 stu_mode_menu *pModeMenu;		//系统当前菜单
+stu_system_mode *pStuSystemMode;		//当前系统防御模式
+
 
 unsigned char *pMcuVersions = "v2.8";		//这样子写的字符串只能赋值给指针
 unsigned char *pHardVersions = "v2.0";
@@ -39,6 +43,20 @@ static void stgMenu_dl_DeleteCBS(void);
 static void stgMenu_dl_ReviewCBS(void);
 static void stgMenu_dl_ReviewMainCBS(void);
 static void HexToAscii(unsigned char *pHex, unsigned char *pAscii, int nLen);
+
+static void S_ENArmModeProc(void);
+static void S_AlarmModeProc(void);
+static void S_HomeArmModeProc(void);
+static void S_DisArmModeProc(void);
+
+
+stu_system_mode stu_Sysmode[SYSTEM_MODE_SUM] =
+{
+	{SYSTEM_MODE_ENARM,SCREEN_CMD_RESET,0xFF,S_ENArmModeProc},
+	{SYSTEM_MODE_HOMEARM,SCREEN_CMD_RESET,0xFF,S_HomeArmModeProc},
+	{SYSTEM_MODE_DISARM,SCREEN_CMD_RESET,0xFF,S_DisArmModeProc},
+	{SYSTEM_MODE_ALARM,SCREEN_CMD_RESET,0xFF,S_AlarmModeProc},
+};
 
 //初始化桌面菜单
 stu_mode_menu generalModeMenu[GNL_MENU_SUM] =
@@ -234,10 +252,95 @@ void Menu_Init(void)
 	pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];	//设置上电显示的菜单界面为桌面显示
 	pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;	//更新刷新界面标志，进入界面后刷新全界面UI
 
+}
 
+//切换系统防御模式
+static void SystemMode_Change(SYSTEMMODE_TYPEDEF sysMode)
+{
+	if(sysMode < SYSTEM_MODE_SUM)	//传入的形参(模式)是否正确
+	{
+		pStuSystemMode = &stu_Sysmode[sysMode];
+		pStuSystemMode->refreshScreenCmd = SCREEN_CMD_RESET;
+	}
+}
 
+//离家布防模式处理
+static void S_ENArmModeProc(void)
+{
+	unsigned char tBuff[3],id,dat;
+	Stu_DTC tStuDtc;
+	if(pStuSystemMode->refreshScreenCmd == SCREEN_CMD_RESET)
+	{
+		pStuSystemMode->refreshScreenCmd = SCREEN_CMD_NULL;
+		pStuSystemMode->keyVal = 0xFF;
+		
+	 
+		hal_Oled_ClearArea(0,20,128,24);		//清防御模式文案
+		hal_Oled_ClearArea(0,12,128,8);		//清报警探测器文案
+		hal_Oled_ShowString(16,20,"Away arm",24,1);
+		 
+		hal_Oled_Refresh();
+	}
+	
+	
+	if(QueueDataLen(RFDRcvMsg))
+	{
+		QueueDataOut(RFDRcvMsg,&dat);
+		if(dat == '#')
+		{
+			QueueDataOut(RFDRcvMsg,&tBuff[2]);	//地址码高8位
+			QueueDataOut(RFDRcvMsg,&tBuff[1]);	//地址码低8位
+			QueueDataOut(RFDRcvMsg,&tBuff[0]);	//数据码/功能码
+			//EV1527编码方式:1111 0000,高4位1111是地址，0000数据码/功能码
+			//2262编码方式：1111 0000都是数据码/功能码
+			id = DtcMatching(tBuff);		//探测器匹配
+			if(id != 0xFF)
+			{
+				//匹配到探测器
+				GetDtcStu(&tStuDtc,id-1);
+				if(tStuDtc.DTCType == DTC_REMOTE)
+				{
+					if(tBuff[0] == SENSOR_CODE_REMOTE_DISARM)
+					{
+						SystemMode_Change(SYSTEM_MODE_DISARM);	//遥控器控制撤防
+					}else if(tBuff[0] == SENSOR_CODE_REMOTE_HOMEARM)
+					{
+						SystemMode_Change(SYSTEM_MODE_HOMEARM);	//遥控器控制在家布防
+					}else if(tBuff[0] == SENSOR_CODE_REMOTE_SOS)
+					{
+						SystemMode_Change(SYSTEM_MODE_ALARM);	//遥控器触发SOS报警
+						QueueDataIn(DtcTriggerIDMsg, &id, 1); 
+					}
+				}if(tBuff[0]==SENSOR_CODE_DOOR_OPEN)	//((tBuff[0]==0x0A)	
+				{
+					SystemMode_Change(SYSTEM_MODE_ALARM);
+					QueueDataIn(DtcTriggerIDMsg, &id, 1);
+					//切换到Alarming(报警中)
+					//SystemMode_Change(SYSTEM_MODE_ALARM);	//探测器触发报警
+				
+				}
+			}
+			
+		}
+	}
+}
+
+static void S_DisArmModeProc(void)
+{
 
 }
+
+static void S_HomeArmModeProc(void)
+{
+
+}
+
+static void S_AlarmModeProc(void)
+{
+
+}
+
+
 
 static void gnlMenu_DesktopCBS(void)
 {
