@@ -2,7 +2,6 @@
 #include "hal_led.h"
 #include "hal_key.h"
 #include "hal_oled.h"
-#include "app.h"
 #include "hal_Uart.h"
 #include "OS_System.h"
 #include "hal_rfd.h"
@@ -11,7 +10,8 @@
 #include "hal_beep.h"
 #include "string.h"
 #include "mcu_api.h"
-
+#include "wifi.h"
+#include "app.h"
 
 
 Queue8 RFDRcvMsg;	//RFD接收队列
@@ -1709,9 +1709,13 @@ static void stgMenu_dl_DeleteCBS(void)
 //wifi配网菜单处理函数
 static void stgMenu_WifiCBS(void)
 {
+	static unsigned char APStep = 0;
+	static unsigned char ConnectSuccess = 0;
 	static unsigned char stgMainMenuSelectedPos = 0;
 	static unsigned short timer = 0;
 	unsigned char keys;
+	unsigned char wifiWorkState = 0;
+
 
 	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
 	{
@@ -1732,6 +1736,8 @@ static void stgMenu_WifiCBS(void)
 		hal_Oled_Refresh();
 		
 		keys = 0xFF;
+		APStep = 0;
+		ConnectSuccess = 0;
 		timer = 0;
 
 		stgMainMenuSelectedPos = 0;
@@ -1763,7 +1769,25 @@ static void stgMenu_WifiCBS(void)
 				hal_Oled_Refresh();
  
 			}
-		}else if(keys == KEY5_CLICK_RELEASE)
+		}
+		else if((keys == KEY6_CLICK_RELEASE)
+		&& (!APStep)
+		&& (!ConnectSuccess))
+		{
+			if(stgMainMenuSelectedPos)
+			{
+				APStep = 1;
+				mcu_set_wifi_mode(1);		//让wifi进入AP配网模式
+				hal_Oled_ClearArea(0,20,128,44);		//清屏
+				hal_Oled_ShowString(16,30,"Please wait..",8,1);
+				hal_Oled_Refresh();	
+			}else
+			{
+				pModeMenu = pModeMenu->pParent;
+				pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+			}
+		}
+		else if(keys == KEY5_CLICK_RELEASE)
 		{
 			pModeMenu = pModeMenu->pParent;
 			pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
@@ -1773,6 +1797,69 @@ static void stgMenu_WifiCBS(void)
 			pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;
 		}
 		 
+	}
+
+	if(APStep)
+	{
+		wifiWorkState = mcu_get_wifi_work_state();
+	}
+	
+	if(APStep == 1)
+	{
+		if(wifiWorkState == AP_STATE)
+		{
+			hal_Oled_ClearArea(0,20,128,44);		//清屏
+			hal_Oled_ShowString(0,30,"Enter ap mode.",8,1);
+			hal_Oled_Refresh();
+			LedMsgInput(LED1,LED_BLINK1,1);
+			APStep = 2;
+		}
+	}else if(APStep == 2)
+	{
+		if(wifiWorkState == WIFI_NOT_CONNECTED)
+		{
+			hal_Oled_ClearArea(0,20,128,44);		//清屏
+			hal_Oled_ShowString(0,30,"Connect to wifi ok.",8,1);
+			hal_Oled_Refresh();
+			LedMsgInput(LED1,LED_BLINK3,1);
+			APStep = 3;	
+		}
+	}else if(APStep == 3)
+	{
+		if(wifiWorkState == WIFI_CONNECTED)
+		{
+			hal_Oled_ClearArea(0,20,128,44);		//清屏
+			hal_Oled_ShowString(0,30,"Connect to router ok.",8,1);
+			hal_Oled_Refresh();
+			LedMsgInput(LED1,LED_BLINK4,1);
+			APStep = 4;
+		}
+	}else if(APStep == 4)
+	{
+		if(wifiWorkState == WIFI_CONN_CLOUD)
+		{
+			hal_Oled_ClearArea(0,20,128,44);		//清屏
+			hal_Oled_ShowString(0,30,"Connect to server ok.",8,1);
+			hal_Oled_ShowString(0,40,"Connect success!",8,1);
+			hal_Oled_Refresh();
+			LedMsgInput(LED1,LED_LIGHT,1);
+			APStep = 0;
+			ConnectSuccess = 1;
+			timer = 0;
+		}
+	}
+	
+	if(ConnectSuccess)
+	{
+		timer++;
+		if(timer >200)
+		{
+			timer = 0;
+			ConnectSuccess = 0;
+			 
+			pModeMenu = pModeMenu->pParent;
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RECOVER;
+		}
 	}
 }
 
