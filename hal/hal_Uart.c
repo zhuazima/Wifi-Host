@@ -2,6 +2,7 @@
 #include "stm32f10x_usart.h"
 #include "hal_Uart.h"
 #include "OS_System.h"
+#include "mcu_api.h"
 
 volatile Queue256 DebugTxMsg;
 volatile unsigned char DebugIsBusy; 	        //Debug有数据正在发送标志
@@ -49,6 +50,8 @@ static void hal_Uart1DebugProc(void)
 
 }
 
+
+
 static void hal_Uart2WIFICommProc(void)
 {
 
@@ -60,6 +63,8 @@ void hal_Uart_Init(void)
     QueueEmpty(DebugTxMsg);
     hal_Uart_Config();
     hal_DMA_Config();
+
+	wifi_protocol_init();
 
     hal_UartProcArr[Uart1_Debug] = hal_Uart1DebugProc;
     hal_UartProcArr[Uart2_WIFI_Comm] = hal_Uart2WIFICommProc;
@@ -211,6 +216,7 @@ void USART2_IRQHandler(void)
 		QueueDataIn(DebugTxMsg,&dat,1);
 		USART_ClearITPendingBit(USART2,USART_IT_RXNE);
 		
+		uart_receive_input(dat);
 	}
 	
 	if(USART_GetITStatus(USART2,USART_IT_TXE) != RESET)
@@ -237,6 +243,29 @@ void DMA1_Channel4_IRQHandler(void)
 		DMA_Cmd(DMA1_Channel4, DISABLE);				 
 		DebugIsBusy = 0;
 	}
+}
+
+static void hal_DebugSendByte(unsigned char  Dat)
+{
+	USART_SendData(USART1, Dat);
+	USART_ITConfig(USART1, USART_IT_TXE, ENABLE); 	
+	
+}
+
+static void hal_SendByte(unsigned char data)
+{
+	//USART_SendData(WIFI_USART_PORT,data);
+	 
+	USART_SendData(USART1, (uint8_t) data);
+	while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET);
+}
+
+void hal_Wifi_SendByte(unsigned char data)
+{
+	//USART_SendData(WIFI_USART_PORT,data);
+	QueueDataIn(DebugTxMsg,&data,1);
+	USART_SendData(USART2, (uint8_t) data);
+	while (USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
 }
 
 

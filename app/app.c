@@ -10,6 +10,7 @@
 #include "para.h"
 #include "hal_beep.h"
 #include "string.h"
+#include "mcu_api.h"
 
 
 
@@ -199,6 +200,7 @@ void AppProc(void)
 	
 	pModeMenu->action();
 
+	wifi_uart_service();
 
 }
 

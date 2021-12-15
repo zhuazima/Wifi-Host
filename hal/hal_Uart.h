@@ -29,6 +29,7 @@ typedef enum
 
 void hal_Uart_Proc(void);
 void hal_Uart_Init(void);
+void hal_Wifi_SendByte(unsigned char data);
 
 
 

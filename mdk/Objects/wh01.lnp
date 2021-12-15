@@ -38,6 +38,10 @@
 ".\objects\os_system.o"
 ".\objects\app.o"
 ".\objects\para.o"
+".\objects\cjson.o"
+".\objects\mcu_api.o"
+".\objects\protocol.o"
+".\objects\system.o"
 --library_type=microlib --strict --scatter ".\Objects\wh01.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

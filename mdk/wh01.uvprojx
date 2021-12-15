@@ -325,7 +325,7 @@
             <wLevel>2</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
-            <uC99>0</uC99>
+            <uC99>1</uC99>
             <uGnu>0</uGnu>
             <useXO>0</useXO>
             <v6Lang>1</v6Lang>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Libraries\CMSIS;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\user;..\Libraries\CMSIS\CM3\CoreSupport;..\hal;..\os;..\Libraries\CMSIS\CM3\DeviceSupport;..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\app</IncludePath>
+              <IncludePath>..\Libraries\CMSIS;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\user;..\Libraries\CMSIS\CM3\CoreSupport;..\hal;..\os;..\Libraries\CMSIS\CM3\DeviceSupport;..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\app;..\mcu_sdk</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -602,6 +602,31 @@
               <FileName>para.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\app\para.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>mcu_sdk</GroupName>
+          <Files>
+            <File>
+              <FileName>cJSON.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\mcu_sdk\cJSON.c</FilePath>
+            </File>
+            <File>
+              <FileName>mcu_api.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\mcu_sdk\mcu_api.c</FilePath>
+            </File>
+            <File>
+              <FileName>protocol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\mcu_sdk\protocol.c</FilePath>
+            </File>
+            <File>
+              <FileName>system.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\mcu_sdk\system.c</FilePath>
             </File>
           </Files>
         </Group>

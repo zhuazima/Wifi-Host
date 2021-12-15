@@ -4,7 +4,7 @@
 Stu_DTC dERP[PARA_DTC_SUM];	//EEPROM设备参数数据结构
 
 void FactoryReset(void);
-static ParaCheck(void);
+static unsigned char ParaCheck(void);
 
 
 void Para_Init(void)
@@ -96,7 +96,7 @@ void FactoryReset(void)
 }
 
 
-static ParaCheck(void)
+static unsigned char ParaCheck(void)
 {
     unsigned char i;
     unsigned char error = 0;
