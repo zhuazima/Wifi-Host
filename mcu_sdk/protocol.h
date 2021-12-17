@@ -20,6 +20,17 @@
 #ifndef __PROTOCOL_H_
 #define __PROTOCOL_H_
 
+typedef enum
+{
+	WF_HOST_STATE,		//主机状态
+	WF_TIME,			//时间
+	WF_CONNECT_STATE,	//WiFi模组连接状态
+}WIFI_MSG_TYPE;
+
+typedef void (*ServerEvent_CallBack)(WIFI_MSG_TYPE type,unsigned char *pData);
+
+void ServerEventCBSRegister(ServerEvent_CallBack pCBS);
+
 /******************************************************************************
                             用户相关信息配置
 ******************************************************************************/
@@ -27,8 +38,8 @@
                             1:修改产品信息                
 ******************************************************************************/
 //pid信息，服务端自动插入
-#define PRODUCT_KEY "lnn4keweppwpycpz"    //开发平台创建产品后生成的16位字符产品唯一标识
-
+// #define PRODUCT_KEY "lnn4keweppwpycpz"    //开发平台创建产品后生成的16位字符产品唯一标识
+#define PRODUCT_KEY "z86np7zyb1earzd4"    //开发平台创建产品后生成的16位字符产品唯一标识
 #define MCU_VER "1.0.0"                                 //用户的软件版本,用于MCU固件升级,MCU升级版本需修改
 
 //配网方式选择,默认为CONFIG_MODE_DEFAULT,只能三选一

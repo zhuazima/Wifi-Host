@@ -12,6 +12,9 @@
         "hal_cpu.h": "c",
         "hal_rfd.h": "c",
         "hal_eeprom.h": "c",
-        "para.h": "c"
+        "para.h": "c",
+        "wifi.h": "c",
+        "protocol.h": "c",
+        "system.h": "c"
     }
 }

@@ -11,6 +11,7 @@
 #include "string.h"
 #include "mcu_api.h"
 #include "wifi.h"
+#include "protocol.h"
 #include "app.h"
 
 
@@ -50,6 +51,7 @@ static void S_AlarmModeProc(void);
 static void S_HomeArmModeProc(void);
 static void S_DisArmModeProc(void);
 
+static void ServerEventHandle(WIFI_MSG_TYPE type,unsigned char *pData);
 
 stu_system_mode stu_Sysmode[SYSTEM_MODE_SUM] =
 {
@@ -99,6 +101,7 @@ void AppInit(void)
 	Menu_Init();
 	hal_KeyScanCBSRegister(KeyEventHandle);
 	hal_RFCRcvCBSRegister(RfdRcvHandle);
+	ServerEventCBSRegister(ServerEventHandle);
 
 	QueueEmpty(RFDRcvMsg);
 	QueueEmpty(DtcTriggerIDMsg);
@@ -269,6 +272,9 @@ static void SystemMode_Change(SYSTEMMODE_TYPEDEF sysMode)
 	{
 		pStuSystemMode = &stu_Sysmode[sysMode];
 		pStuSystemMode->refreshScreenCmd = SCREEN_CMD_RESET;
+
+		mcu_dp_enum_update(DPID_MASTER_MODE,sysMode,STR_GATEWAY_ITSELF_ID,my_strlen(STR_GATEWAY_ITSELF_ID)); //上报主机模式
+
 	}
 }
 
@@ -539,6 +545,7 @@ static void S_AlarmModeProc(void)
 				hal_Oled_ClearArea(0,12,128,8);		//清报警探测器文案
 				hal_Oled_ShowString(34,12,"Remote:",8,1);
 				hal_Oled_ShowString(76,12,"sos",8,1);
+				mcu_dp_string_update(DPID_ALARM_ACTIVE,"Remote:sos",sizeof("Remote:sos"),STR_GATEWAY_ITSELF_ID,my_strlen(STR_GATEWAY_ITSELF_ID)); //STRING型数据上报;	
 					
 			}
 			else if(tStuDtc.DTCType == DTC_DOOR)
@@ -547,13 +554,14 @@ static void S_AlarmModeProc(void)
 				hal_Oled_ClearArea(0,12,128,8);		//清报警探测器文案
 				hal_Oled_ShowString(25,12,"Door:",8,1);
 				hal_Oled_ShowString(55,12,tStuDtc.Name,8,1);	
+				mcu_dp_string_update(DPID_ALARM_ACTIVE,tStuDtc.Name,sizeof(tStuDtc.Name),STR_GATEWAY_ITSELF_ID,my_strlen(STR_GATEWAY_ITSELF_ID)); //STRING型数据上报
 			}
 			
 			hal_Oled_Refresh();
 			timer = 1;
 		}
 	}
-	
+
 	if(timer)
 	{
 		timer++;
@@ -2050,7 +2058,33 @@ static void RfdRcvHandle(unsigned char *pBuff)
 	 
 }
 
+//云服务器数据接收回调函数
+static void ServerEventHandle(WIFI_MSG_TYPE type,unsigned char *pData)
+{
+	switch(type)
+	{
+		case WF_HOST_STATE:	//主机状态
+			if(*pData == 0)
+			{
+				SystemMode_Change(SYSTEM_MODE_ENARM);
+			}else if(*pData == 1)
+			{
+				SystemMode_Change(SYSTEM_MODE_HOMEARM);
+			}else if(*pData == 2)
+			{
+				SystemMode_Change(SYSTEM_MODE_DISARM);
+			}
+		break;
+	}
+}
 
+void mcu_all_dp_update()
+{
+
+  mcu_dp_enum_update(DPID_MASTER_MODE,pStuSystemMode->ID,STR_GATEWAY_ITSELF_ID,my_strlen(STR_GATEWAY_ITSELF_ID)); //枚举型数据上报;
+  mcu_dp_string_update(DPID_ALARM_ACTIVE," ",sizeof(" "),STR_GATEWAY_ITSELF_ID,my_strlen(STR_GATEWAY_ITSELF_ID)); //STRING型数据上报;
+
+}
 
 
 

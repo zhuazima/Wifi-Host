@@ -25,6 +25,9 @@
 ******************************************************************************/
 #include "hal_Uart.h"
 #include "wifi.h"
+#include "app.h"
+
+ServerEvent_CallBack ServeiEventCBS;
 
 
 /******************************************************************************
@@ -143,6 +146,9 @@ void all_data_update(void)
 
 */
 
+
+	mcu_all_dp_update();
+
 }
 
 /******************************************************************************
@@ -167,6 +173,12 @@ static unsigned char dp_download_master_mode_handle(const unsigned char value[],
     unsigned char master_mode;
     
     master_mode = mcu_get_dp_download_enum(value,length);
+
+    if(ServeiEventCBS)
+    {
+        ServeiEventCBS(WF_HOST_STATE,&master_mode);
+    }
+    
     switch(master_mode) {
         case 0:
             /*****************************************************************************
@@ -2574,4 +2586,12 @@ void alarm_infor_result(const unsigned char p_data[], unsigned short data_len)
     }
 }
 #endif
+
+void ServerEventCBSRegister(ServerEvent_CallBack pCBS)
+{
+	if(pCBS)
+	{
+		ServeiEventCBS = pCBS;
+	}
+}
 
