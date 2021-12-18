@@ -11,7 +11,7 @@
 
 
 void hal_BeepInit(void);
-
+void hal_BeepPwmCtrl(unsigned char cmd);
 
 
 

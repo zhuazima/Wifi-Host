@@ -45,8 +45,6 @@ void hal_Oled_ClearPoint(unsigned char x,unsigned char y);
 void hal_Oled_ColorTurn(unsigned char i);
 void hal_Oled_DisplayTurn(unsigned char i);
 void hal_Oled_WR_Byte(unsigned char dat,unsigned char mode);
-void hal_Oled_DisPlay_On(void);
-void hal_Oled_DisPlay_Off(void);
 void hal_Oled_Refresh(void);
 void hal_Oled_Clear(void);
 void hal_Oled_DrawPoint(unsigned char x,unsigned char y,unsigned char t);
@@ -60,7 +58,8 @@ void hal_Oled_ScrollDisplay(unsigned char num,unsigned char space,unsigned char 
 void hal_Oled_Init(void);
 void hal_Oled_ClearArea(unsigned char x,unsigned char y,unsigned char sizex,unsigned char sizey);
 
-
+void hal_Oled_DisPlay_On(void);
+void hal_Oled_DisPlay_Off(void);
 
 
 

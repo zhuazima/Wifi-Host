@@ -8,6 +8,8 @@
 #define SENSOR_CODE_DOOR_TAMPER		0x07		 //防拆,预留
 #define	SENSOR_CODE_DOOR_LOWPWR		0x06		 //低压
 
+#define SETUPMENU_TIMEOUT_PERIOD	2000			//设置菜单没任何操作自动返回桌面时间，20秒
+#define PUTOUT_SCREEN_PERIOD			3000			//没任何操作熄屏时间,30秒
 
 
 //遥控器 EV1527编码

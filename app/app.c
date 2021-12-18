@@ -25,6 +25,11 @@ stu_mode_menu *pModeMenu;		//系统当前菜单
 stu_system_mode *pStuSystemMode;		//当前系统防御模式
 unsigned char wifiWorkState,bwifiWorkState;	//WiFi模组工作状态
 
+unsigned short SetupMenuTimeOutCnt;
+
+unsigned short PutoutScreenTiemr;		//关屏时间
+unsigned char ScreenState;				//屏幕状态,0关屏，1开屏
+
 
 unsigned char *pMcuVersions = "v2.8";		//这样子写的字符串只能赋值给指针
 unsigned char *pHardVersions = "v2.0";
@@ -46,6 +51,8 @@ static void stgMenu_dl_DeleteCBS(void);
 static void stgMenu_dl_ReviewCBS(void);
 static void stgMenu_dl_ReviewMainCBS(void);
 static void HexToAscii(unsigned char *pHex, unsigned char *pAscii, int nLen);
+
+static void ScreeControl(unsigned char cmd);
 
 static void S_ENArmModeProc(void);
 static void S_AlarmModeProc(void);
@@ -203,6 +210,33 @@ void AppProc(void)
 {
 	wifi_uart_service();
 	pModeMenu->action();
+
+	if((pModeMenu->menuPos!=DESKTOP_MENU_POS) 
+	&&(pModeMenu->menuPos!=STG_WIFI_MENU_POS))
+	{
+		SetupMenuTimeOutCnt++;
+		if(SetupMenuTimeOutCnt > SETUPMENU_TIMEOUT_PERIOD)
+		{
+			SetupMenuTimeOutCnt = 0;
+			pModeMenu = &generalModeMenu[GNL_MENU_DESKTOP];	//设置上电显示的菜单界面为桌面显示
+			pModeMenu->refreshScreenCmd = SCREEN_CMD_RESET;	//更新刷新界面标志，进入界面后刷新全界面UI
+
+		}
+	}
+			
+	if((pStuSystemMode->ID!=SYSTEM_MODE_ALARM)
+	&& (pModeMenu->menuPos!=STG_WIFI_MENU_POS))
+	{
+		PutoutScreenTiemr++;
+		if(PutoutScreenTiemr > PUTOUT_SCREEN_PERIOD)
+		{
+			PutoutScreenTiemr = 0;
+			
+			//30秒没任何操作自动熄屏
+			ScreeControl(0);
+			 
+		}
+	}
 }
 
 
@@ -268,6 +302,8 @@ static void SystemMode_Change(SYSTEMMODE_TYPEDEF sysMode)
 {
 	if(sysMode < SYSTEM_MODE_SUM)	//传入的形参(模式)是否正确
 	{
+		ScreeControl(1);
+		PutoutScreenTiemr = 0;
 		pStuSystemMode = &stu_Sysmode[sysMode];
 		pStuSystemMode->refreshScreenCmd = SCREEN_CMD_RESET;
 
@@ -2093,7 +2129,19 @@ static void stgMenu_FactorySettingsCBS(void)
 //按键回调函数
 static void KeyEventHandle(KEY_VALUE_TYPEDEF keys)
 {
-	pModeMenu->keyVal = keys;
+	if(!ScreenState)
+	{
+		ScreeControl(1);
+	}else
+	{
+		pModeMenu->keyVal = keys;
+		if((pModeMenu->menuPos!=DESKTOP_MENU_POS) 
+			&&(pModeMenu->menuPos!=STG_WIFI_MENU_POS))
+			{
+				SetupMenuTimeOutCnt = 0;
+			}
+		PutoutScreenTiemr = 0;
+	}
 }
 
 
@@ -2172,7 +2220,26 @@ void mcu_all_dp_update()
 
 }
 
-
+static void ScreeControl(unsigned char cmd)
+{
+	if(cmd)
+	{
+		if(!ScreenState)
+		{
+			ScreenState = 1;
+			hal_Oled_DisPlay_On();
+			PutoutScreenTiemr = 0;
+		}
+	}else
+	{
+		if(ScreenState)
+		{
+			ScreenState = 0;
+			hal_Oled_DisPlay_Off();
+			PutoutScreenTiemr = 0;
+		}
+	}
+}
 
 
 
