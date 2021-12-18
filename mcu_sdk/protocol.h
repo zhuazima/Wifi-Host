@@ -175,7 +175,7 @@ wifi_test_result内部有#err提示,完成函数后请删除该#err
 并在protocol.c文件wifi_status_result函数内查看结果,
 wifi_status_result内部有#err提示,完成函数后请删除该#err
 ******************************************************************************/
-//#define         GET_WIFI_STATUS_ENABLE                //开启获取wifi状态
+#define         GET_WIFI_STATUS_ENABLE                //开启获取wifi状态
 
 /******************************************************************************
                       MCU是否需要支持恢复出厂设置

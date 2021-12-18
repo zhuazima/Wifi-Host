@@ -23,6 +23,7 @@ LINK_STATE_TYPEDEF link_state;
 stu_system_time stuSystemtime;		//系统时间
 stu_mode_menu *pModeMenu;		//系统当前菜单
 stu_system_mode *pStuSystemMode;		//当前系统防御模式
+unsigned char wifiWorkState,bwifiWorkState;	//WiFi模组工作状态
 
 
 unsigned char *pMcuVersions = "v2.8";		//这样子写的字符串只能赋值给指针
@@ -598,6 +599,7 @@ static void S_AlarmModeProc(void)
 static void gnlMenu_DesktopCBS(void)
 {
 	unsigned char keys;
+	static unsigned short timer = 0;
 	if(pModeMenu->refreshScreenCmd == SCREEN_CMD_RESET)
 	{
 		pModeMenu->refreshScreenCmd = SCREEN_CMD_NULL;
@@ -617,6 +619,59 @@ static void gnlMenu_DesktopCBS(void)
 		hal_Oled_Refresh();
 		
 	}
+
+	timer++;
+	if(wifiWorkState == WIFI_CONN_CLOUD)
+	{
+		if(timer > 6000)
+		{
+			timer = 0;
+		
+			get_wifi_st();	//发送获取模组连接状态指令
+		
+		}	
+	}else
+	{
+		if(timer > 100)
+		{
+			timer = 0;
+		
+			get_wifi_st();	//发送获取模组连接状态指令
+		
+		}
+	}
+	if(bwifiWorkState != wifiWorkState)
+	{
+		bwifiWorkState = wifiWorkState;
+		switch(wifiWorkState)
+		{
+			case SMART_CONFIG_STATE:		//进入smartlink配网状态
+				
+				hal_Oled_ShowString(0,0,"N",8,1);
+				LedMsgInput(LED1,LED_BLINK1,1);
+				hal_Oled_Refresh();
+			break;	
+			
+			case WIFI_NOT_CONNECTED:		//WIFI配置成功但未连上路由器
+				hal_Oled_ShowString(0,0,"W",8,1);
+				LedMsgInput(LED1,LED_BLINK3,1);
+				hal_Oled_Refresh();
+			break;
+			case WIFI_CONNECTED:			//WIFI配置成功且连上路由器
+				hal_Oled_ShowString(0,0,"R",8,1);
+				LedMsgInput(LED1,LED_BLINK4,1);
+				hal_Oled_Refresh();
+			break;
+			
+			case WIFI_CONN_CLOUD: 			//WIFI已经连接上云服务器
+				hal_Oled_ShowString(0,0,"S",8,1);
+				LedMsgInput(LED1,LED_LIGHT,1);
+				hal_Oled_Refresh();
+				 
+			break;
+		}
+	}
+
 	if(pModeMenu->keyVal != 0xff)
 	{
 		keys = pModeMenu->keyVal;
@@ -630,9 +685,10 @@ static void gnlMenu_DesktopCBS(void)
 			break;
 		}
 	}
-
-
 	pStuSystemMode->action(); //=S_ENArmModeProc();//执行系统防线模式
+
+
+	
 
 }
 
@@ -2074,6 +2130,20 @@ static void ServerEventHandle(WIFI_MSG_TYPE type,unsigned char *pData)
 			{
 				SystemMode_Change(SYSTEM_MODE_DISARM);
 			}
+		break;
+		case WF_CONNECT_STATE:
+			wifiWorkState = *pData;
+						/**
+			 * @brief  获取 WIFI 状态结果
+			 * @param[in] {result} 指示 WIFI 工作状态
+			 * @ref         0x00: wifi状态 1 smartconfig 配置状态
+			 * @ref         0x01: wifi状态 2 AP 配置状态
+			 * @ref         0x02: wifi状态 3 WIFI 已配置但未连上路由器
+			 * @ref         0x03: wifi状态 4 WIFI 已配置且连上路由器
+			 * @ref         0x04: wifi状态 5 已连上路由器且连接到云端
+			 * @ref         0x05: wifi状态 6 WIFI 设备处于低功耗模式
+			 * @ref         0x06: wifi状态 7 Smartconfig&AP共存状态
+			 */	
 		break;
 	}
 }

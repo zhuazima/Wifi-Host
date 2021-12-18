@@ -1021,32 +1021,37 @@ void wifi_test_result(unsigned char result,unsigned char rssi)
  */
 void wifi_status_result(unsigned char result)
 {
-    #error "请自行实现WIFI 工作状态结果代码,完成后请删除该行"
-    switch(result) {
-        case 0:
-            //wifi工作状态1
-        break;
-        case 1:
-            //wifi工作状态2
-        break;
-        case 2:
-            //wifi工作状态3
-        break;
-        case 3:
-            //wifi工作状态4
-        break;
-        case 4:
-            //wifi工作状态5
-        break;
-        case 5:
-            //wifi工作状态6
-        break;
-        case 6:
-            //wifi工作状态7
-        break;
-        default:
-        break;
-    }
+    // #error "请自行实现WIFI 工作状态结果代码,完成后请删除该行"
+    if(ServeiEventCBS)
+	{
+		ServeiEventCBS(WF_CONNECT_STATE,&result);
+	}
+
+    // switch(result) {
+    //     case 0:
+    //         //wifi工作状态1
+    //     break;
+    //     case 1:
+    //         //wifi工作状态2
+    //     break;
+    //     case 2:
+    //         //wifi工作状态3
+    //     break;
+    //     case 3:
+    //         //wifi工作状态4
+    //     break;
+    //     case 4:
+    //         //wifi工作状态5
+    //     break;
+    //     case 5:
+    //         //wifi工作状态6
+    //     break;
+    //     case 6:
+    //         //wifi工作状态7
+    //     break;
+    //     default:
+    //     break;
+    // }
 }
 #endif
 
