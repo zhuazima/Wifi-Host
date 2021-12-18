@@ -201,11 +201,8 @@ static void showSystemTime(void)
 
 void AppProc(void)
 {
-	
-	pModeMenu->action();
-
 	wifi_uart_service();
-
+	pModeMenu->action();
 }
 
 
@@ -275,7 +272,19 @@ static void SystemMode_Change(SYSTEMMODE_TYPEDEF sysMode)
 		pStuSystemMode->refreshScreenCmd = SCREEN_CMD_RESET;
 
 		mcu_dp_enum_update(DPID_MASTER_MODE,sysMode,STR_GATEWAY_ITSELF_ID,my_strlen(STR_GATEWAY_ITSELF_ID)); //上报主机模式
-
+		
+		if(sysMode == SYSTEM_MODE_ALARM)
+		{
+			hal_BeepPwmCtrl(1);
+		}else
+		{
+			hal_BeepPwmCtrl(0);
+			if(sysMode == SYSTEM_MODE_DISARM)
+			{
+				LedMsgInput(BUZ,LED_LIGHT_100MS,1);
+			}
+			LedMsgInput(BUZ,LED_LIGHT_100MS,0);
+		}
 	}
 }
 
@@ -325,6 +334,10 @@ static void S_ENArmModeProc(void)
 					{
 						SystemMode_Change(SYSTEM_MODE_ALARM);	//遥控器触发SOS报警
 						QueueDataIn(DtcTriggerIDMsg, &id, 1); 
+					}
+					else if(tBuff[0] == SENSOR_CODE_REMOTE_ENARM)
+					{
+						SystemMode_Change(SYSTEM_MODE_ENARM);	//遥控器控制撤防
 					}
 				}if(tBuff[0]==SENSOR_CODE_DOOR_OPEN)	//((tBuff[0]==0x0A)	
 				{
@@ -630,6 +643,13 @@ static void gnlMenu_DesktopCBS(void)
 			get_wifi_st();	//发送获取模组连接状态指令
 		
 		}	
+
+		if((timer%200)==0)	//2秒获取时间
+		{
+			mcu_get_system_time();	//每2秒获取一次系统时间
+			showSystemTime();		//这里需要耗费几十ms
+		}
+
 	}else
 	{
 		if(timer > 100)
@@ -2074,32 +2094,6 @@ static void stgMenu_FactorySettingsCBS(void)
 static void KeyEventHandle(KEY_VALUE_TYPEDEF keys)
 {
 	pModeMenu->keyVal = keys;
-	 
-	// if((keys==KEY1_CLICK)
-	// || (keys==KEY2_CLICK)
-	// || (keys==KEY3_CLICK)
-	// || (keys==KEY4_CLICK)
-	// || (keys==KEY5_CLICK)
-	// || (keys==KEY6_CLICK))
-	// {
-	// 	LedMsgInput(LED1,LED_LIGHT,1);
-	// }else if((keys==KEY1_CLICK_RELEASE)
-	// || (keys==KEY2_CLICK_RELEASE)
-	// || (keys==KEY3_CLICK_RELEASE)
-	// || (keys==KEY4_CLICK_RELEASE)
-	// || (keys==KEY5_CLICK_RELEASE)
-	// || (keys==KEY6_CLICK_RELEASE))
-	// {
-	// 	LedMsgInput(LED1,LED_BLINK4,1);
-	// }else if((keys==KEY1_LONG_PRESS)
-	// || (keys==KEY2_LONG_PRESS)
-	// || (keys==KEY3_LONG_PRESS)
-	// || (keys==KEY4_LONG_PRESS)
-	// || (keys==KEY5_LONG_PRESS)
-	// || (keys==KEY6_LONG_PRESS))
-	// {
-	// 	LedMsgInput(LED1,LED_DARK,1);
-	// }
 }
 
 
@@ -2131,6 +2125,27 @@ static void ServerEventHandle(WIFI_MSG_TYPE type,unsigned char *pData)
 				SystemMode_Change(SYSTEM_MODE_DISARM);
 			}
 		break;
+		case WF_TIME:
+		/*
+		time[0]为是否获取时间成功标志，为 0 表示失败，为 1表示成功
+		time[1] 为 年 份 , 0x00 表 示2000 年
+		time[2]为月份，从 1 开始到12 结束
+		time[3]为日期，从 1 开始到31 结束
+		time[4]为时钟，从 0 开始到23 结束
+		time[5]为分钟，从 0 开始到59 结束
+		time[6]为秒钟，从 0 开始到59 结束
+		time[7]为星期，从 1 开始到 7 结束，1代表星期一
+		*/
+		//2021-04-09 wes 17:22
+			stuSystemtime.year=2000+pData[1];
+			stuSystemtime.mon=pData[2];
+			stuSystemtime.day=pData[3];
+			stuSystemtime.hour=pData[4];
+			stuSystemtime.min=pData[5];
+			stuSystemtime.sec=pData[6];
+			stuSystemtime.week=pData[7];
+			
+		break;
 		case WF_CONNECT_STATE:
 			wifiWorkState = *pData;
 						/**
@@ -2145,6 +2160,7 @@ static void ServerEventHandle(WIFI_MSG_TYPE type,unsigned char *pData)
 			 * @ref         0x06: wifi状态 7 Smartconfig&AP共存状态
 			 */	
 		break;
+
 	}
 }
 

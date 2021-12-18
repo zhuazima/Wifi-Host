@@ -743,7 +743,7 @@ void mcu_get_greentime(unsigned char time[])
  */
 void mcu_write_rtctime(unsigned char time[])
 {
-    #error "请自行完成RTC时钟写入代码,并删除该行"
+//    #error "请自行完成RTC时钟写入代码,并删除该行"
     /*
     time[0]为是否获取时间成功标志，为 0 表示失败，为 1表示成功
     time[1] 为 年 份 , 0x00 表 示2000 年
@@ -754,9 +754,16 @@ void mcu_write_rtctime(unsigned char time[])
     time[6]为秒钟，从 0 开始到59 结束
     time[7]为星期，从 1 开始到 7 结束，1代表星期一
     */
-    if(time[0] == 1) {
-        //正确接收到wifi模块返回的本地时钟数据 
-    }else {
+    if(time[0] == 1)
+    {
+        //正确接收到wifi模块返回的本地时钟数据
+        if(ServeiEventCBS)
+        {
+            ServeiEventCBS(WF_TIME,time);
+        }
+    }
+    else 
+    {
         //获取本地时钟数据出错,有可能是当前wifi模块未联网
     }
 }

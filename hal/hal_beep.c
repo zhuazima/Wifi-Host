@@ -89,7 +89,7 @@ void hal_BeepInit(void)
 {
 	hal_BeepConfig();
 	hal_CreatTimer(T_BEEP,hal_BeepPwmHandle,120,T_STA_START);
-	hal_BeepPwmCtrl(1);
+	hal_BeepPwmCtrl(0);
 }
 
 
