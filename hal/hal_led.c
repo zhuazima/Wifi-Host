@@ -19,7 +19,7 @@ void (*hal_LedDrive[LED_SUM])(unsigned char) = {	hal_Led1Drive,
 									
 unsigned short Led_Dark[] = {0,10,LED_EFFECT_END};
 unsigned short Led_Light[] = {1,10,LED_EFFECT_END};
-unsigned short Led_Light100ms[] = {1,10,0,10,LED_EFFECT_END};	
+unsigned short Led_Light100ms[] = {1,10,0,10,LED_EFFECT_END};
 unsigned short Led_Blink1[] = {1,10,0,10,LED_EFFECT_AGN,2};
 unsigned short Led_Blink2[] = {1,10,0,10,1,10,0,10,1,10,0,200,LED_EFFECT_AGN,6};
 unsigned short Led_Blink3[] = {1,30,0,30,LED_EFFECT_AGN,2};
@@ -57,7 +57,6 @@ void hal_LedInit(void)
 	LedMsgInput(BUZ,LED_DARK,1);
 }
 
-	
 void hal_LedProc(void)
 {
 	unsigned char i;
@@ -72,8 +71,8 @@ void hal_LedProc(void)
 				switch(cmd)
 				{
 					case LED_DARK:
-						pLed[i] = (unsigned short *)Led_Dark;
-						LedTimer[i] = *(pLed[i]+1);
+						pLed[i] = (unsigned short *)Led_Dark;	//时间指针指向特效数组
+						LedTimer[i] = *(pLed[i]+1);				//取出当前特效数组的下一位，也就特效时间
 					break;
 					
 					case LED_LIGHT:
@@ -105,6 +104,9 @@ void hal_LedProc(void)
 						pLed[i] = (unsigned short *)Led_Blink4;
 						LedTimer[i] = *(pLed[i]+1);
 					break;
+
+					default :
+					break;
 					
 					 
 				}
@@ -121,13 +123,13 @@ void LedMsgInput(unsigned char type,LED_EFFECT_TEPEDEF cmd,unsigned char clr)
 		return;
 	}
 	bLedCMD = cmd;
-	if(clr)
+	if(clr)			//这个特效是否要立即执行
 	{
 		QueueEmpty(LedCmdBuff[type]);
 		LedLoadFlag[type] = 0;
 		 
 	}
-	QueueDataIn(LedCmdBuff[type],&bLedCMD,1);
+	QueueDataIn(LedCmdBuff[type],&bLedCMD,1);	//特效入列
 	
 }
 

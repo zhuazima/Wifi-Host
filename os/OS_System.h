@@ -1,22 +1,12 @@
-/*
- * @Author: your name
- * @Date: 2021-11-20 19:28:52
- * @LastEditTime: 2021-11-22 19:14:37
- * @LastEditors: your name
- * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- * @FilePath: \Wifi Host\os\OS_System.h
- */
+
 #ifndef _OS_SYSTEM_H_
 #define _OS_SYSTEM_H_
-
-
-
 
 extern void S_QueueEmpty(unsigned char **Head, unsigned char **Tail, unsigned char *HBuff);
 extern void S_QueueDataIn(unsigned char **Head, unsigned char **Tail, unsigned char *HBuff, unsigned short Len, unsigned char *HData, unsigned short DataLen);
 extern unsigned char S_QueueDataOut(unsigned char **Head, unsigned char **Tail, unsigned char *HBuff, unsigned short Len, unsigned char *Data);
 extern unsigned short S_QueueDataLen(unsigned char **Head, unsigned char **Tail, unsigned short Len);
- 
+
  
 #define QueueEmpty(x)	   S_QueueEmpty((unsigned char**)&(x).Head,(unsigned char**)&(x).Tail,(unsigned char*)(x).Buff) 
 #define QueueDataIn(x,y,z) S_QueueDataIn((unsigned char**)&(x).Head,(unsigned char**)&(x).Tail,(unsigned char*)(x).Buff,sizeof((x).Buff),(y),(z))
@@ -47,8 +37,6 @@ typedef struct{unsigned char *Head; unsigned char *Tail; unsigned char Buff[1024
 typedef struct{unsigned char *Head; unsigned char *Tail; unsigned char Buff[2048+1];} Queue2K;
 typedef struct{unsigned char *Head; unsigned char *Tail; unsigned char Buff[5120+1];} Queue5K;
 typedef struct{unsigned char *Head; unsigned char *Tail; unsigned char Buff[10240+1];} Queue10K;
-
-
 
 typedef enum
 {

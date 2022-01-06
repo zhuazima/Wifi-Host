@@ -2142,6 +2142,15 @@ static void KeyEventHandle(KEY_VALUE_TYPEDEF keys)
 			}
 		PutoutScreenTiemr = 0;
 	}
+
+
+/////////////////////////////////////////////
+	// if(keys == KEY1_CLICK_RELEASE)
+	// {
+	// 	LedMsgInput(LED1,LED_LIGHT_100MS,1);
+	// }
+		
+/////////////////////////////////////////////
 }
 
 

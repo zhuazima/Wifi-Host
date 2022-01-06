@@ -9,7 +9,7 @@ CPUInterrupt_CallBack_t CPUInterrupptCtrlCBS;
 *  @函数名   OS_CPUInterruptCBSRegister						                                                           
 *  @描述     注册CPU中断控制函数								                                     
 *  @参数     pCPUInterruptCtrlCBS-CPU中断控制回调函数地址
-*  @返回值   无   
+*  @返回值   无
 *  @注意     无
 ********************************************************************************************************/
 void OS_CPUInterruptCBSRegister(CPUInterrupt_CallBack_t pCPUInterruptCtrlCBS)
@@ -36,7 +36,7 @@ void OS_TaskInit(void)
 		OS_Task[i].RunFlag = OS_SLEEP;
 		OS_Task[i].RunPeriod = 0;
 		OS_Task[i].RunTimer = 0;
-	}	
+	}
 }
 
 

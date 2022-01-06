@@ -2,12 +2,8 @@
 #include "hal_led.h"
 #include "hal_time.h"
 
-
 static void hal_Timer4Config(void);
-
 static void Hal_TimerHandle(void);
- 
-
 volatile Stu_TimerTypedef Stu_Timer[T_SUM];
 
 void hal_TimeInit(void)
@@ -112,7 +108,6 @@ TIMER_STATE_TYPEDEF	hal_GetTimerState(TIMER_ID_TYPEDEF id)
 	if(Stu_Timer[id].func)		//判断定时器是否存在
 	{
 		return Stu_Timer[id].state;
-	 
 	}else
 	{
 		return T_STA_INVAILD;

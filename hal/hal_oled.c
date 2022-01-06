@@ -429,7 +429,7 @@ void hal_Oled_DisplayTurn(unsigned char i)
 		}
 }
 
-static void hal_Oled_WR_Byte(unsigned char dat,unsigned char cmd)
+static void hal_Oled_WR_Byte(unsigned char dat,unsigned char cmd)		//硬件实现SPI 模式 3
 {		
 	unsigned char retry=0;		
 	if(cmd)
@@ -453,6 +453,42 @@ static void hal_Oled_WR_Byte(unsigned char dat,unsigned char cmd)
  		 		  
 	OLED_DC_Set();   	  
 }
+
+
+
+// static void hal_Oled_WR_Byte(unsigned char dat,unsigned char cmd)	//软件实现SPI 模式 3
+// {		
+// 	unsigned char i;
+
+// 	if(cmd)
+// 	{
+// 		OLED_DC_Set();
+// 	}else 
+// 	{
+// 		OLED_DC_Clr();		  
+// 	}
+	
+// 	OLED_CS_Clr();
+// 	for(i = 0;i < 8;i++)
+// 	{
+// 		OLED_SCL_Clr();		//SPI 模式 3 空闲时候SCL是高的状态，要先拉低
+// 		if(dat & 0x80)
+// 		{
+// 			OLED_SDA_Set();
+// 		}
+// 		else
+// 		{
+// 			OLED_SDA_Clr();
+// 		}
+// 		OLED_SCL_Set();
+// 		dat <<= 1;
+
+// 	} 
+// 	OLED_DC_Set();
+// 	OLED_CS_Set();
+// }
+
+
 
 //清屏指定区域
 //x,y：起点坐标
